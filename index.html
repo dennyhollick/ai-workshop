@@ -1,0 +1,4320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn PMM Workshop — Context Management for PMMs</title>
+
+<!-- === FONTS === -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+<!-- === GSAP + SCROLLTRIGGER === -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+/* =========================================== */
+/* === DESIGN TOKENS                      === */
+/* =========================================== */
+:root {
+  --bg: #E8E0D4;
+  --bg-light: #F0EAE0;
+  --accent: #C45D2C;
+  --accent-light: rgba(196, 93, 44, 0.12);
+  --text: #2A2A2A;
+  --heading: #1A1A1A;
+  --muted: #7A756E;
+  --line-art: #2A2A2A;
+  --line-art-light: rgba(42, 42, 42, 0.15);
+  --panel-bg: #F5F0E8;
+  --panel-border: #D8D2C8;
+  --code-bg: #2A2A2A;
+  --code-text: #D4D0CC;
+  --success: #3D7A4A;
+  --warning: #B8860B;
+  --error: #A03030;
+
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Source Sans 3', 'Source Sans Pro', sans-serif;
+
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 2rem;
+  --space-lg: 4rem;
+  --space-xl: 6rem;
+  --space-2xl: 10rem;
+
+  --max-width: 1200px;
+  --grid-gap: 2rem;
+  --line-weight: 1.8;
+  --radius: 6px;
+  --transition: 0.3s ease;
+}
+
+/* =========================================== */
+/* === RESET & BASE                       === */
+/* =========================================== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { font-size: 16px; scroll-behavior: auto; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* =========================================== */
+/* === TYPOGRAPHY                         === */
+/* =========================================== */
+h1, h2, h3 { font-family: var(--font-serif); color: var(--heading); font-weight: 700; line-height: 1.15; }
+h1 { font-size: clamp(3rem, 6vw, 5.5rem); font-weight: 900; }
+h2 { font-size: clamp(2rem, 4vw, 3.5rem); }
+h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); font-weight: 700; }
+p { font-size: 1.15rem; max-width: 38em; }
+
+/* =========================================== */
+/* === LAYOUT                             === */
+/* =========================================== */
+.section {
+  min-height: 100vh;
+  padding: var(--space-xl) var(--space-lg);
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.section-inner {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+/* Section number watermark */
+.section-number {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-lg);
+  font-family: var(--font-serif);
+  font-size: clamp(8rem, 15vw, 14rem);
+  font-weight: 900;
+  color: var(--heading);
+  opacity: 0.04;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Thin horizontal rule -- editorial style */
+.rule {
+  border: none;
+  border-top: 1px solid var(--line-art-light);
+  margin: var(--space-lg) 0;
+}
+
+/* Line art SVG defaults */
+.line-art {
+  fill: none;
+  stroke: var(--line-art);
+  stroke-width: var(--line-weight);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.line-art .accent-stroke { stroke: var(--accent); }
+.line-art .accent-fill { fill: var(--accent); stroke: none; }
+.line-art .muted-stroke { stroke: var(--muted); stroke-width: 1; }
+
+/* =========================================== */
+/* === LINE ART ILLUSTRATIONS             === */
+/* =========================================== */
+.line-art-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.line-art-illustration svg {
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+}
+
+.line-art-illustration.small svg {
+  width: 80px;
+  height: 80px;
+}
+
+/* =========================================== */
+/* === SECTION 00: OPENER                 === */
+/* =========================================== */
+.opener { min-height: 100vh; padding-top: var(--space-2xl); align-items: flex-start; }
+
+.opener-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+.opener h1 { margin-bottom: var(--space-sm); }
+
+.opener .subtitle {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 300;
+  color: var(--muted);
+  margin-bottom: var(--space-xs);
+  max-width: 30em;
+}
+
+.opener .speaker {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: var(--space-lg);
+}
+
+.outcomes { list-style: none; margin-bottom: var(--space-lg); }
+
+.outcomes li {
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  gap: var(--space-sm);
+  align-items: baseline;
+  font-size: 1.15rem;
+  padding: var(--space-sm) 0;
+  margin-bottom: var(--space-sm);
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.outcome-num {
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--accent);
+  opacity: 0.4;
+  line-height: 1;
+}
+
+.opener-illustration { opacity: 0; transform: translateY(20px); }
+
+/* =========================================== */
+/* === SECTION 01: THE PROBLEM            === */
+/* =========================================== */
+.problem { overflow: hidden; }
+
+.problem-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+  align-items: center;
+}
+
+.problem-text h2 { margin-bottom: var(--space-md); }
+.problem-text p { margin-bottom: var(--space-md); }
+
+/* Diet pill animation */
+.diet-pill-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pill {
+  width: 160px;
+  height: 64px;
+  border-radius: 32px;
+  display: flex;
+  position: relative;
+  z-index: 2;
+}
+
+.pill-half-left {
+  width: 50%;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 32px 0 0 32px;
+}
+
+.pill-half-right {
+  width: 50%;
+  height: 100%;
+  background: #F5F0E8;
+  border-radius: 0 32px 32px 0;
+  border: 2px solid var(--panel-border);
+  border-left: none;
+}
+
+.buzz-word {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-sans);
+  color: var(--muted);
+  white-space: nowrap;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* =========================================== */
+/* === SECTION 03: THE DEMO               === */
+/* =========================================== */
+.demo { min-height: 100vh; padding-top: var(--space-lg); align-items: flex-start; }
+
+.demo h2 { margin-bottom: var(--space-md); }
+
+.prompt-bar {
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.9rem;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-lg);
+  line-height: 1.6;
+  opacity: 0;
+}
+
+.prompt-bar span { color: var(--accent); }
+
+.panels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.panel {
+  background: var(--code-bg);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+/* Terminal chrome bar */
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.05);
+  position: relative;
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.terminal-dot.red { background: #ff5f57; }
+.terminal-dot.yellow { background: #febc2e; }
+.terminal-dot.green { background: #28c840; }
+
+.terminal-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.panel:nth-child(1) .terminal-title { color: var(--muted); }
+.panel:nth-child(2) .terminal-title { color: var(--warning); }
+.panel:nth-child(3) .terminal-title { color: var(--accent); }
+
+.panel-header {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.panel-header h3 {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+  color: var(--code-text);
+}
+
+.panel-context {
+  font-size: 0.78rem;
+  color: rgba(212, 208, 204, 0.6);
+  font-style: italic;
+}
+
+/* Context visualization — the visual hero of each panel */
+.panel-context-viz {
+  height: 220px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Panel 1: Empty dropzone */
+.context-dropzone {
+  width: 85%;
+  height: 160px;
+  border: 2px dashed rgba(212, 208, 204, 0.2);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  opacity: 0;
+}
+
+.context-dropzone svg {
+  opacity: 0.3;
+}
+
+.context-dropzone span {
+  font-size: 0.82rem;
+  color: rgba(212, 208, 204, 0.35);
+  font-style: italic;
+}
+
+/* Panel 2: Chaotic piled docs with overflow */
+.context-chaos-item {
+  position: absolute;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(212, 208, 204, 0.7);
+  white-space: nowrap;
+  opacity: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.context-chaos-item.overflow-item {
+  color: rgba(228, 87, 46, 0.8);
+  border-color: rgba(228, 87, 46, 0.2);
+}
+
+.context-overflow-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background: linear-gradient(to top, rgba(228, 87, 46, 0.15), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(228, 87, 46, 0.7);
+  opacity: 0;
+}
+
+/* Panel 3: Clean 2x2 grid */
+.context-clean-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 90%;
+}
+
+.context-clean-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(196, 93, 44, 0.12);
+  color: var(--accent);
+  opacity: 0;
+  transform: translateY(-10px);
+  border: 1px solid rgba(196, 93, 44, 0.15);
+}
+
+.context-clean-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(40, 200, 64, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.context-clean-check svg {
+  width: 10px;
+  height: 10px;
+}
+
+.panel-body {
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  min-height: 120px;
+  color: var(--code-text);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Diagnostic callout */
+.diagnostic {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: var(--space-md) var(--space-lg);
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.diagnostic h3 {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin-bottom: var(--space-sm);
+}
+
+.diagnostic ul {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xs) var(--space-md);
+}
+
+.diagnostic li {
+  font-size: 0.92rem;
+  padding-left: 1.5em;
+  position: relative;
+}
+
+.diagnostic li::before {
+  content: "\2713";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* =========================================== */
+/* === SECTION 04: THE NEW HIRE           === */
+/* =========================================== */
+.newhire-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+  margin-top: var(--space-lg);
+}
+
+.scenario {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: var(--space-lg);
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.scenario-label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: var(--space-sm);
+}
+
+.scenario-a .scenario-label { color: var(--error); }
+.scenario-b .scenario-label { color: var(--success); }
+.scenario-a { border-top: 3px solid var(--error); }
+.scenario-b { border-top: 3px solid var(--success); }
+
+.scenario .line-art-illustration { max-height: 160px; min-height: 120px; margin-bottom: var(--space-md); }
+.scenario .line-art-illustration svg { max-height: 140px; }
+.scenario p { font-size: 1rem; }
+
+.newhire-cta {
+  margin-top: var(--space-lg);
+  font-family: var(--font-serif);
+  font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+  font-style: italic;
+  color: var(--heading);
+  padding-left: var(--space-md);
+  border-left: 4px solid var(--accent);
+  opacity: 0;
+}
+
+/* =========================================== */
+/* === SECTION 05: ARTIFACT SYSTEM        === */
+/* =========================================== */
+.artifacts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.artifact-card {
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(30px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.artifact-card.expanded {
+  grid-column: 1 / -1;
+  cursor: default;
+}
+
+/* --- Mini document (collapsed state) --- */
+.doc-mini {
+  width: 100%;
+  max-width: 140px;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.artifact-card:not(.expanded):hover .doc-mini {
+  transform: translateY(-4px);
+}
+.artifact-card:not(.expanded):hover .doc-mini .doc-page {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.doc-page {
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.doc-accent-bar {
+  height: 6px;
+}
+
+.doc-squiggles {
+  padding: 16px 18px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.doc-squiggle {
+  height: 3px;
+  border-radius: 2px;
+  background: #ddd;
+}
+
+.artifact-card h3 {
+  font-size: 0.95rem;
+  margin-top: var(--space-xs);
+  margin-bottom: 0;
+  line-height: 1.3;
+}
+
+/* --- Expanded content --- */
+.doc-expanded {
+  display: none;
+  width: 100%;
+  max-width: 640px;
+  min-height: 860px;
+  margin: 0 auto;
+  text-align: left;
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  position: relative;
+}
+
+.artifact-card.expanded .doc-mini { display: none; }
+.artifact-card.expanded h3 { display: none; }
+.artifact-card.expanded .doc-expanded { display: block; }
+.artifact-card.expanded { align-items: flex-start; }
+
+/* Hide non-expanded cards when one is expanded */
+.artifacts-grid.has-expanded .artifact-card:not(.expanded) {
+  display: none;
+}
+
+.doc-expanded-bar {
+  height: 8px;
+}
+
+.doc-expanded-inner {
+  padding: var(--space-lg) var(--space-lg) var(--space-xl);
+}
+
+.doc-expanded-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.doc-expanded-title {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.doc-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  background: var(--bg-light);
+  color: var(--muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+}
+
+.doc-close-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.doc-expanded-body {
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.doc-expanded-body h4 {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: var(--space-xs);
+}
+
+.doc-expanded-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--space-sm);
+  font-size: 0.88rem;
+}
+
+.doc-expanded-body th {
+  text-align: left;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--panel-border);
+  font-size: 0.82rem;
+  color: var(--heading);
+}
+
+.doc-expanded-body td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  vertical-align: top;
+}
+
+.doc-expanded-body tr:last-child td { border-bottom: none; }
+
+.doc-expanded-body blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 8px 16px;
+  margin: var(--space-xs) 0;
+  font-style: italic;
+  color: var(--muted);
+  background: var(--accent-light);
+  border-radius: 0 4px 4px 0;
+}
+
+.doc-expanded-body .doc-tag {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.doc-expanded-body .do-say {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.doc-expanded-body .dont-say {
+  color: var(--error);
+  font-weight: 600;
+  text-decoration: line-through;
+}
+
+.doc-expanded-body pre {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  color: var(--text);
+}
+
+/* --- Dependency diagram --- */
+.artifact-dependencies {
+  text-align: center;
+  padding: var(--space-md) 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  position: relative;
+}
+
+.dep-diagram-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: var(--space-sm);
+}
+
+.artifact-dep-svg {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  display: block;
+}
+
+.dep-connection {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+}
+
+.dep-doc-icon rect:first-child {
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.1));
+}
+
+/* =========================================== */
+/* === SECTION 06: THREE RULES            === */
+/* =========================================== */
+.rules-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+.rule-card {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: var(--space-md);
+  align-items: start;
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.rule-icon {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rule-content h3 {
+  margin-bottom: var(--space-xs);
+  font-size: 1.25rem;
+}
+
+.rule-content h3 .rule-num {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.rule-content p { font-size: 1rem; color: var(--text); }
+
+/* =========================================== */
+/* === SECTION 02: THE CONTEXT WINDOW     === */
+/* =========================================== */
+.theory-section { overflow: visible; position: relative; }
+
+.theory-insight {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-style: italic;
+  color: var(--heading);
+  padding-left: var(--space-md);
+  border-left: 4px solid var(--accent);
+  line-height: 1.7;
+}
+
+/* Split comparison layout */
+.cw-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+  position: relative;
+  /* SVG connector overlay is positioned relative to this */
+}
+
+.cw-col-label {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: var(--space-sm);
+}
+
+/* App mockup (left column) */
+.cw-mockup {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #d4d0c8;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  min-height: 480px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+}
+
+.cw-mock-sidebar {
+  background: #f7f5f0;
+  border-right: 1px solid #e8e4dc;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cw-mock-project-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--heading);
+  padding: 8px 6px;
+  margin-bottom: 8px;
+}
+
+.cw-mock-files {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+
+.cw-mock-file, .cw-mock-instruction {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.7rem;
+  color: var(--text);
+  padding: 5px 6px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.cw-mock-file:hover, .cw-mock-instruction:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+.cw-mock-instruction {
+  border-top: 1px solid #e8e4dc;
+  padding-top: 12px;
+  margin-top: auto;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* Chat area */
+.cw-mock-chat {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.cw-mock-history {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.cw-mock-msg {
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 85%;
+}
+
+.cw-mock-msg-user {
+  background: var(--accent);
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.cw-mock-msg-ai {
+  background: #f0ece4;
+  color: var(--text);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.cw-mock-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f7f5f0;
+  border: 1px solid #d4d0c8;
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--text);
+  margin-top: auto;
+}
+
+.cw-mock-cursor {
+  width: 2px;
+  height: 14px;
+  background: var(--accent);
+  animation: cursorBlink 1s step-end infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Connector lines overlay */
+.cw-connectors {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.cw-connector-line {
+  stroke: var(--accent);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+  fill: none;
+  opacity: 0;
+}
+
+/* Right column context window */
+.cw-viz-container {
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .cw-split { grid-template-columns: 1fr; }
+  .cw-mockup { grid-template-columns: 140px 1fr; min-height: 380px; }
+  .cw-connectors { display: none; }
+  .cw-progressive { display: none; }
+}
+
+.cw-window {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  border: 2px solid var(--line-art-light);
+  border-radius: var(--radius);
+  padding: var(--space-sm);
+  min-height: 480px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 4px;
+  background: var(--bg-light);
+}
+
+.cw-block {
+  border-radius: 4px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(20px);
+  cursor: default;
+}
+
+.cw-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.cw-block-label {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cw-block-tokens {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.7);
+}
+
+/* Hover-to-expand preview inside blocks */
+.cw-block-preview {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.35s ease, opacity 0.25s ease, margin-top 0.35s ease;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.65rem;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.75);
+  white-space: pre-wrap;
+  margin-top: 0;
+}
+
+.cw-block:hover .cw-block-preview {
+  max-height: 120px;
+  opacity: 1;
+  margin-top: 8px;
+}
+
+.cw-block-training .cw-block-preview {
+  color: var(--muted);
+}
+
+/* Progressive elements — hidden until GSAP reveals */
+.cw-progressive {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.cw-block-prompt { background: var(--accent); min-height: 28px; }
+.cw-block-history { background: #8B6914; min-height: 72px; }
+.cw-block-files { background: #6B4226; min-height: 140px; }
+.cw-block-instruction { background: #7A5B3A; min-height: 40px; }
+.cw-block-system { background: #5A6B4A; min-height: 58px; }
+.cw-block-tools { background: #4A5A6B; min-height: 50px; }
+
+.cw-block-training {
+  border: 2px dashed var(--line-art-light);
+  background: transparent;
+  min-height: 36px;
+  opacity: 0.5;
+}
+
+.cw-block-training .cw-block-label {
+  color: var(--muted);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.cw-block-training .cw-block-tokens {
+  color: var(--muted);
+}
+
+/* Capacity bar */
+.cw-capacity {
+  margin-top: var(--space-md);
+  max-width: 460px;
+}
+
+.cw-capacity-bar {
+  width: 100%;
+  height: 20px;
+  background: var(--line-art-light);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.cw-capacity-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.cw-capacity-label {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: var(--space-xs);
+}
+
+/* =========================================== */
+/* === SECTION 07: THE PLAN               === */
+/* =========================================== */
+.tenet-badge {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 4px 12px;
+  border-radius: 3px;
+  font-style: italic;
+}
+
+/* =========================================== */
+/* === SECTION 08: BREATHER               === */
+/* =========================================== */
+.breather {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.breather .section-inner {
+  max-width: 800px;
+}
+
+.breather h2 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  margin-bottom: var(--space-sm);
+  opacity: 0;
+}
+
+.breather .breather-subtitle {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+  font-style: italic;
+  color: var(--accent);
+  margin-bottom: var(--space-lg);
+  opacity: 0;
+}
+
+.breather .breather-body {
+  font-size: 1.2rem;
+  color: var(--muted);
+  max-width: 32em;
+  margin: 0 auto;
+  line-height: 1.9;
+  opacity: 0;
+}
+
+/* =========================================== */
+/* === SECTION 09: SYNTHESIS DEMO         === */
+/* =========================================== */
+.synthesis-pipeline {
+  margin-top: var(--space-lg);
+  position: relative;
+}
+
+.pipeline-step {
+  margin-bottom: var(--space-lg);
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.step-indicator {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: var(--space-sm);
+}
+
+.transcript-blocks {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.transcript-block {
+  background: #faf8f4;
+  border: 1px solid #e8e4dc;
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  flex: 1;
+  color: var(--muted);
+  font-style: italic;
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.transcript-block:nth-child(1) { transform: scale(0.9) rotate(-1.5deg); }
+.transcript-block:nth-child(2) { transform: scale(0.9) rotate(0.8deg); }
+.transcript-block:nth-child(3) { transform: scale(0.9) rotate(-0.5deg); }
+
+.transcript-block .block-label {
+  font-weight: 700;
+  color: var(--heading);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.grouped-block {
+  background: #fff;
+  border: 1px solid #d4d0c8;
+  border-radius: var(--radius);
+  padding: var(--space-md) var(--space-lg);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.stat-bar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stat-bar-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 100px;
+  gap: 12px;
+  align-items: center;
+}
+
+.stat-bar-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.stat-bar-pct {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-align: right;
+}
+
+.stat-bar-track {
+  height: 8px;
+  background: var(--line-art-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  width: 0;
+  transition: width 0.8s ease;
+}
+
+.synthesis-block {
+  background: #fff;
+  border: 1px solid #d4d0c8;
+  border-radius: 8px;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-20px);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.synthesis-block-header {
+  background: var(--code-bg);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.synthesis-block-header span {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.synthesis-block-body {
+  padding: var(--space-md) var(--space-lg);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.pipeline-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xs) 0;
+}
+
+.pipeline-connector svg {
+  width: 24px;
+  height: 32px;
+}
+
+/* Before/After comparison */
+/* Summary spreadsheet table */
+.summary-spreadsheet {
+  background: #fff;
+  border: 1px solid #d4d0c8;
+  border-radius: var(--radius);
+  overflow: hidden;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.synth-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.synth-table thead {
+  background: #f7f5f0;
+}
+
+.synth-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--heading);
+  border-bottom: 2px solid #d4d0c8;
+}
+
+.synth-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #e8e4dc;
+  color: var(--text);
+  vertical-align: top;
+}
+
+.synth-table-row {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.synth-table-row-fade td {
+  color: var(--muted);
+}
+
+.transcript-raw p:not(.block-label) {
+  font-size: 0.78rem;
+}
+
+/* =========================================== */
+/* === SECTION 10: GET SET UP             === */
+/* =========================================== */
+.setup-steps {
+  margin-top: var(--space-lg);
+  counter-reset: setup-counter;
+}
+
+/* Tool option chips */
+.tool-chips {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.tool-chip {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 3px;
+}
+
+/* Tool comparison table */
+.tool-comparison {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  margin-top: var(--space-md);
+}
+
+.tool-comparison th {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-align: left;
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 2px solid var(--accent);
+}
+
+.tool-comparison td {
+  padding: var(--space-xs) var(--space-sm);
+  border-bottom: 1px solid var(--line-art-light);
+  vertical-align: top;
+}
+
+.tool-comparison td:first-child {
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.tool-logo {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+/* Code block with copy button */
+.code-block-wrapper {
+  position: relative;
+  margin-top: var(--space-sm);
+}
+
+.code-block {
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.copy-btn {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--code-text);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.copy-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.copy-btn.copied {
+  background: var(--success);
+  color: #fff;
+  border-color: var(--success);
+}
+
+/* =========================================== */
+/* === SECTION 11: DIAGNOSE GAPS          === */
+/* =========================================== */
+.path-tab {
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: var(--space-sm) var(--space-md);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  flex: 1;
+  min-width: 200px;
+}
+
+.path-tab:hover {
+  border-color: var(--accent);
+}
+
+.path-tab.active {
+  border-color: var(--accent);
+  border-top: 3px solid var(--accent);
+  background: var(--bg-light);
+}
+
+.path-tab h3 {
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+}
+
+.path-tab .path-label {
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.path-body {
+  font-size: 1.02rem;
+  color: var(--muted);
+  display: none;
+  padding-top: var(--space-xs);
+  line-height: 1.6;
+}
+
+.path-tab.active .path-body {
+  display: block;
+}
+
+/* Diagnostic table */
+.diag-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.02rem;
+  margin-top: var(--space-lg);
+}
+
+.diag-table th {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 2px solid var(--accent);
+}
+
+.diag-table td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--line-art-light);
+  vertical-align: top;
+}
+
+.diag-table tr:last-child td {
+  border-bottom: none;
+}
+
+.diag-table td:first-child {
+  font-style: italic;
+  color: var(--muted);
+}
+
+.diag-table td:last-child {
+  font-weight: 600;
+  color: var(--heading);
+}
+
+/* =========================================== */
+/* === SECTION 12: CLOSING                === */
+/* =========================================== */
+.closing {
+  background: var(--code-bg);
+  color: var(--code-text);
+}
+
+.closing .section-number {
+  color: rgba(255,255,255,0.04);
+}
+
+.closing h2 {
+  color: #fff;
+  text-align: center;
+}
+
+.closing .section-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Top/bottom nav */
+.pres-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px var(--space-lg);
+  pointer-events: none;
+}
+
+.pres-nav-btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: rgba(232, 224, 212, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--panel-border);
+  padding: 6px 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.pres-nav-btn:hover {
+  background: #fff;
+  border-color: var(--accent);
+}
+
+.pres-nav-btn-linkedin {
+  color: #0A66C2;
+}
+
+.pres-nav-btn-linkedin:hover {
+  border-color: #0A66C2;
+}
+
+.pres-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--code-bg);
+}
+
+.pres-footer .pres-nav-btn {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.15);
+  color: var(--accent);
+}
+
+.pres-footer .pres-nav-btn:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: var(--accent);
+}
+
+.pres-footer .pres-nav-btn-linkedin {
+  color: #5B9BD5;
+}
+
+.pres-footer .pres-nav-btn-linkedin:hover {
+  border-color: #5B9BD5;
+}
+
+/* Example report button */
+.example-report-btn {
+  display: inline-block;
+  margin-top: var(--space-sm);
+  background: var(--accent-light);
+  color: var(--accent);
+  border: 1px solid rgba(196, 93, 44, 0.25);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.example-report-btn:hover {
+  background: rgba(196, 93, 44, 0.2);
+  border-color: var(--accent);
+}
+
+.example-report-btn-lg {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-md);
+  font-size: 1.1rem;
+  padding: 14px 24px;
+  text-align: center;
+  border-radius: var(--radius);
+}
+
+.setup-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.setup-btn-row .example-report-btn-lg {
+  margin-top: 0;
+}
+
+/* Report modal */
+.report-modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md);
+}
+
+.report-modal {
+  background: #fff;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 900px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 16px 60px rgba(0,0,0,0.3);
+}
+
+.report-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--panel-border);
+  flex-shrink: 0;
+}
+
+.report-modal-title {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.report-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--panel-border);
+  background: var(--bg-light);
+  color: var(--muted);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.report-modal-close:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.report-modal-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: var(--space-sm);
+}
+
+.report-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-lg) var(--space-xl);
+  background: #fff;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.report-modal-body h1 {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin: 0 0 var(--space-sm);
+}
+
+.report-modal-body h2 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin: var(--space-lg) 0 var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--line-art-light);
+}
+
+.report-modal-body h3 {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+.report-modal-body h4 {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+.report-modal-body p {
+  margin: 0 0 var(--space-sm);
+  max-width: none;
+}
+
+.report-modal-body blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 8px 16px;
+  margin: var(--space-sm) 0;
+  font-style: italic;
+  color: var(--muted);
+  background: var(--accent-light);
+  border-radius: 0 4px 4px 0;
+}
+
+.report-modal-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin: var(--space-sm) 0 var(--space-md);
+}
+
+.report-modal-body th {
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  padding: 8px 10px;
+  border-bottom: 2px solid var(--accent);
+}
+
+.report-modal-body td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line-art-light);
+  vertical-align: top;
+}
+
+.report-modal-body hr {
+  border: none;
+  border-top: 1px solid var(--line-art-light);
+  margin: var(--space-md) 0;
+}
+
+.report-modal-body ol, .report-modal-body ul {
+  padding-left: 1.5em;
+  margin: 0 0 var(--space-sm);
+}
+
+.report-modal-body li {
+  margin-bottom: 6px;
+}
+
+/* =========================================== */
+/* === RESPONSIVE                         === */
+/* =========================================== */
+@media (max-width: 900px) {
+  .opener-grid,
+  .problem-grid,
+  .newhire-grid,
+  .before-after,
+  .theory-grid { grid-template-columns: 1fr; }
+  .panels { grid-template-columns: 1fr; }
+  .diagnostic ul { grid-template-columns: 1fr; }
+  .section { padding: var(--space-lg) var(--space-md); }
+  .rule-card { grid-template-columns: 80px 1fr; }
+  .artifacts-grid { grid-template-columns: repeat(2, 1fr); }
+  .doc-mini { max-width: 140px; }
+  .artifact-dep-svg { max-width: 100%; overflow-x: auto; }
+  .doc-expanded-body table { font-size: 0.82rem; }
+  .doc-expanded-body th, .doc-expanded-body td { padding: 6px 8px; }
+  .path-tab { min-width: unset; }
+  .diag-table { font-size: 0.82rem; }
+  .diag-table th, .diag-table td { padding: var(--space-xs) var(--space-sm); }
+  .transcript-blocks { flex-direction: column; }
+  .cw-window { max-width: 100%; }
+  .tool-comparison { font-size: 0.78rem; }
+
+  /* Modals: full-screen on mobile */
+  .report-modal-overlay {
+    padding: 0;
+  }
+  .report-modal {
+    height: 100vh;
+    max-width: 100%;
+    border-radius: 0;
+  }
+  .report-modal-header {
+    padding: 10px 14px;
+  }
+  .report-modal-title {
+    font-size: 0.85rem;
+  }
+  .report-modal-close {
+    width: 40px;
+    height: 40px;
+    font-size: 1.4rem;
+  }
+  .report-modal-body {
+    padding: var(--space-md);
+  }
+  .report-modal-body table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .report-modal-body h1 { font-size: 1.3rem; }
+  .report-modal-body h2 { font-size: 1.1rem; }
+
+  /* Footer */
+  .pres-footer {
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+  }
+}
+</style>
+</head>
+<body>
+
+
+<!-- ============================================= -->
+<!-- === SECTION 00: OPENER                     === -->
+<!-- ============================================= -->
+<section class="section opener" id="opener">
+  <span class="section-number">00</span>
+  <div class="section-inner">
+    <div class="opener-grid">
+      <div>
+        <h1 class="opener-title">Context Management<br>for PMMs</h1>
+        <p class="subtitle">The system that turns generic AI output into publishable first drafts</p>
+        <p class="speaker">Denny Hollick + Christoffer Johansen</p>
+
+        <ul class="outcomes">
+          <li><span class="outcome-num">01</span><span>See exactly why most AI output is generic</span></li>
+          <li><span class="outcome-num">02</span><span>Learn the system that fixes it</span></li>
+          <li><span class="outcome-num">03</span><span>Walk out having codified one workflow as a reusable skill</span></li>
+        </ul>
+      </div>
+
+      <!-- Inline SVG: Documents flowing into funnel to organized outputs -->
+      <div class="opener-illustration">
+        <div class="line-art-illustration">
+          <svg viewBox="0 0 420 300" class="line-art" xmlns="http://www.w3.org/2000/svg">
+            <!-- Scattered documents on left -->
+            <rect x="20" y="40" width="50" height="65" rx="3" transform="rotate(-12 45 72)"/>
+            <line x1="30" y1="55" x2="60" y2="55" transform="rotate(-12 45 72)" class="muted-stroke"/>
+            <line x1="30" y1="65" x2="55" y2="65" transform="rotate(-12 45 72)" class="muted-stroke"/>
+            <line x1="30" y1="75" x2="58" y2="75" transform="rotate(-12 45 72)" class="muted-stroke"/>
+
+            <rect x="60" y="130" width="50" height="65" rx="3" transform="rotate(8 85 162)"/>
+            <line x1="70" y1="145" x2="100" y2="145" transform="rotate(8 85 162)" class="muted-stroke"/>
+            <line x1="70" y1="155" x2="95" y2="155" transform="rotate(8 85 162)" class="muted-stroke"/>
+
+            <rect x="15" y="200" width="50" height="65" rx="3" transform="rotate(-5 40 232)"/>
+            <line x1="25" y1="215" x2="55" y2="215" transform="rotate(-5 40 232)" class="muted-stroke"/>
+            <line x1="25" y1="225" x2="50" y2="225" transform="rotate(-5 40 232)" class="muted-stroke"/>
+            <line x1="25" y1="235" x2="52" y2="235" transform="rotate(-5 40 232)" class="muted-stroke"/>
+
+            <rect x="80" y="50" width="50" height="65" rx="3" transform="rotate(5 105 82)"/>
+            <line x1="90" y1="65" x2="120" y2="65" transform="rotate(5 105 82)" class="muted-stroke"/>
+            <line x1="90" y1="75" x2="115" y2="75" transform="rotate(5 105 82)" class="muted-stroke"/>
+
+            <!-- Converging arrows into center -->
+            <path d="M120 80 L185 140" class="accent-stroke" stroke-dasharray="4 4"/>
+            <path d="M115 165 L185 155" class="accent-stroke" stroke-dasharray="4 4"/>
+            <path d="M70 235 L185 170" class="accent-stroke" stroke-dasharray="4 4"/>
+            <path d="M130 55 L185 135" class="accent-stroke" stroke-dasharray="4 4"/>
+
+            <!-- Central processing shape (hexagon) -->
+            <polygon points="210,115 240,130 240,160 210,175 180,160 180,130" class="accent-stroke" stroke-width="2.2"/>
+            <circle cx="210" cy="145" r="12" class="accent-stroke" stroke-width="1.4"/>
+            <circle cx="210" cy="145" r="4" class="accent-fill"/>
+
+            <!-- Output arrows -->
+            <path d="M245 135 L300 100" class="accent-stroke" stroke-dasharray="4 4"/>
+            <path d="M245 150 L300 150" class="accent-stroke" stroke-dasharray="4 4"/>
+            <path d="M245 165 L300 200" class="accent-stroke" stroke-dasharray="4 4"/>
+
+            <!-- Organized output documents on right -->
+            <rect x="305" y="75" width="55" height="50" rx="3"/>
+            <line x1="315" y1="88" x2="350" y2="88" class="accent-stroke" stroke-width="1.4"/>
+            <line x1="315" y1="97" x2="345" y2="97" class="muted-stroke"/>
+            <line x1="315" y1="106" x2="348" y2="106" class="muted-stroke"/>
+
+            <rect x="305" y="132" width="55" height="50" rx="3"/>
+            <line x1="315" y1="145" x2="350" y2="145" class="accent-stroke" stroke-width="1.4"/>
+            <line x1="315" y1="154" x2="345" y2="154" class="muted-stroke"/>
+            <line x1="315" y1="163" x2="348" y2="163" class="muted-stroke"/>
+
+            <rect x="305" y="189" width="55" height="50" rx="3"/>
+            <line x1="315" y1="202" x2="350" y2="202" class="accent-stroke" stroke-width="1.4"/>
+            <line x1="315" y1="211" x2="345" y2="211" class="muted-stroke"/>
+            <line x1="315" y1="220" x2="348" y2="220" class="muted-stroke"/>
+
+            <!-- Small checkmarks on output docs -->
+            <path d="M365 90 L370 96 L380 82" class="accent-stroke" stroke-width="2"/>
+            <path d="M365 147 L370 153 L380 139" class="accent-stroke" stroke-width="2"/>
+            <path d="M365 204 L370 210 L380 196" class="accent-stroke" stroke-width="2"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- === SECTION 01: THE PROBLEM (DIET PILL)    === -->
+<!-- ============================================= -->
+<section class="section problem" id="problem">
+  <span class="section-number">01</span>
+  <div class="section-inner">
+    <div class="problem-grid">
+      <div class="problem-text">
+        <h2>The AI space has a diet&nbsp;pill problem</h2>
+        <p>Everyone's selling prompts, templates, quick fixes. The real work&thinsp;&mdash;&thinsp;the thing that actually determines whether AI output is generic or great&thinsp;&mdash;&thinsp;is context management. That's the human's job now.</p>
+      </div>
+
+      <!-- Diet pill animation -->
+      <div class="diet-pill-container" id="diet-pill-container">
+        <div class="pill" id="diet-pill">
+          <div class="pill-half-left"></div>
+          <div class="pill-half-right"></div>
+        </div>
+        <span class="buzz-word" data-angle="0" style="font-size: 0.9rem;">10x productivity</span>
+        <span class="buzz-word" data-angle="36" style="font-size: 0.75rem;">magic prompts</span>
+        <span class="buzz-word" data-angle="72" style="font-size: 1.1rem;">one weird trick</span>
+        <span class="buzz-word" data-angle="108" style="font-size: 0.8rem;">AI revolution</span>
+        <span class="buzz-word" data-angle="144" style="font-size: 0.95rem;">prompt template</span>
+        <span class="buzz-word" data-angle="180" style="font-size: 0.7rem;">secret formula</span>
+        <span class="buzz-word" data-angle="216" style="font-size: 1rem;">hack your workflow</span>
+        <span class="buzz-word" data-angle="252" style="font-size: 0.85rem;">instant results</span>
+        <span class="buzz-word" data-angle="288" style="font-size: 0.78rem;">just ask AI</span>
+        <span class="buzz-word" data-angle="324" style="font-size: 1.05rem;">copy this prompt</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- === SECTION 02: THE CONTEXT WINDOW          === -->
+<!-- ============================================= -->
+<section class="section theory-section" id="theory">
+  <span class="section-number">02</span>
+  <div class="section-inner">
+    <h2>The context window</h2>
+    <p style="max-width: 38em; margin-bottom: var(--space-lg);">Every conversation starts with a budget. What you put in this window is the only reality the model knows.</p>
+
+    <div class="cw-split" id="cw-split">
+      <!-- LEFT: What you see -->
+      <div class="cw-col">
+        <div class="cw-col-label">What you see</div>
+        <div class="cw-mockup">
+          <!-- Sidebar -->
+          <div class="cw-mock-sidebar">
+            <div class="cw-mock-project-name">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0"><rect x="1" y="1" width="12" height="12" rx="3" stroke="currentColor" stroke-width="1.2"/><line x1="4" y1="5" x2="10" y2="5" stroke="currentColor" stroke-width="1"/><line x1="4" y1="7.5" x2="8" y2="7.5" stroke="currentColor" stroke-width="1"/></svg>
+              <span>Puzzle PMM</span>
+            </div>
+            <div class="cw-mock-files">
+              <div class="cw-mock-file" id="mock-file-1">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h5.5L10 3.5V11H2V1z" stroke="currentColor" stroke-width="0.8"/><path d="M7.5 1v2.5H10" stroke="currentColor" stroke-width="0.8"/></svg>
+                <span>research-synthesis.md</span>
+              </div>
+              <div class="cw-mock-file" id="mock-file-2">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h5.5L10 3.5V11H2V1z" stroke="currentColor" stroke-width="0.8"/><path d="M7.5 1v2.5H10" stroke="currentColor" stroke-width="0.8"/></svg>
+                <span>messaging-brief.md</span>
+              </div>
+              <div class="cw-mock-file" id="mock-file-3">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h5.5L10 3.5V11H2V1z" stroke="currentColor" stroke-width="0.8"/><path d="M7.5 1v2.5H10" stroke="currentColor" stroke-width="0.8"/></svg>
+                <span>icp-profiles.md</span>
+              </div>
+              <div class="cw-mock-file" id="mock-file-4">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h5.5L10 3.5V11H2V1z" stroke="currentColor" stroke-width="0.8"/><path d="M7.5 1v2.5H10" stroke="currentColor" stroke-width="0.8"/></svg>
+                <span>voice-guide.md</span>
+              </div>
+              <div class="cw-mock-file cw-progressive" id="mock-file-5">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h5.5L10 3.5V11H2V1z" stroke="currentColor" stroke-width="0.8"/><path d="M7.5 1v2.5H10" stroke="currentColor" stroke-width="0.8"/></svg>
+                <span>competitive-landscape.md</span>
+              </div>
+              <div class="cw-mock-file cw-progressive" id="mock-file-6">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h5.5L10 3.5V11H2V1z" stroke="currentColor" stroke-width="0.8"/><path d="M7.5 1v2.5H10" stroke="currentColor" stroke-width="0.8"/></svg>
+                <span>call-transcript-01.md</span>
+              </div>
+              <div class="cw-mock-file cw-progressive" id="mock-file-7">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h5.5L10 3.5V11H2V1z" stroke="currentColor" stroke-width="0.8"/><path d="M7.5 1v2.5H10" stroke="currentColor" stroke-width="0.8"/></svg>
+                <span>positioning-matrix.md</span>
+              </div>
+              <div class="cw-mock-file cw-progressive" id="mock-file-8">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h5.5L10 3.5V11H2V1z" stroke="currentColor" stroke-width="0.8"/><path d="M7.5 1v2.5H10" stroke="currentColor" stroke-width="0.8"/></svg>
+                <span>landing-page-v2.md</span>
+              </div>
+            </div>
+            <div class="cw-mock-instruction" id="mock-instruction">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="0.8"/><line x1="3.5" y1="4" x2="8.5" y2="4" stroke="currentColor" stroke-width="0.7"/><line x1="3.5" y1="6" x2="7" y2="6" stroke="currentColor" stroke-width="0.7"/><line x1="3.5" y1="8" x2="8" y2="8" stroke="currentColor" stroke-width="0.7"/></svg>
+              <span>Project instruction</span>
+            </div>
+          </div>
+          <!-- Chat area -->
+          <div class="cw-mock-chat">
+            <div class="cw-mock-history">
+              <div class="cw-mock-msg cw-mock-msg-user" id="mock-history-1">Write a landing page for startup founders switching from QuickBooks</div>
+              <div class="cw-mock-msg cw-mock-msg-ai" id="mock-history-2">Here's a draft landing page targeting startup founders...</div>
+              <div class="cw-mock-msg cw-mock-msg-user" id="mock-history-3">Good start. Make the hero more specific to the pain of manual categorization</div>
+              <div class="cw-mock-msg cw-mock-msg-ai cw-progressive" id="mock-history-4">Updated — hero now leads with "Stop categorizing transactions at midnight"</div>
+              <div class="cw-mock-msg cw-mock-msg-user cw-progressive" id="mock-history-5">Better. Add a social proof section with real customer quotes</div>
+              <div class="cw-mock-msg cw-mock-msg-ai cw-progressive" id="mock-history-6">Added social proof with three founder testimonials and usage stats</div>
+              <div class="cw-mock-msg cw-mock-msg-user cw-progressive" id="mock-history-7">Now tone down the testimonials — they sound too polished</div>
+            </div>
+            <div class="cw-mock-input" id="mock-prompt">
+              <span>Now write a comparison section: Puzzle vs QuickBooks</span>
+              <div class="cw-mock-cursor"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: What Claude sees -->
+      <div class="cw-col">
+        <div class="cw-col-label">What Claude sees</div>
+        <div class="cw-window" id="cw-window">
+          <div class="cw-block cw-block-training" data-order="0">
+            <div class="cw-block-header">
+              <span class="cw-block-label">Model training</span>
+              <span class="cw-block-tokens">(base knowledge)</span>
+            </div>
+          </div>
+          <div class="cw-block cw-block-tools" data-order="1">
+            <div class="cw-block-header">
+              <span class="cw-block-label">Tool definitions</span>
+              <span class="cw-block-tokens">~3K tokens</span>
+            </div>
+            <div class="cw-block-preview">[{"name": "web_search",
+  "description": "Search the web",
+  "parameters": {...}},
+ {"name": "read_file", ...}]</div>
+          </div>
+          <div class="cw-block cw-block-system" data-order="2">
+            <div class="cw-block-header">
+              <span class="cw-block-label">System prompt</span>
+              <span class="cw-block-tokens">~1.5K tokens</span>
+            </div>
+            <div class="cw-block-preview">You are Claude, an AI assistant by
+Anthropic. You are helpful, harmless,
+and honest. Follow instructions
+carefully and ask clarifying
+questions when needed...</div>
+          </div>
+          <div class="cw-block cw-block-instruction" data-order="3" data-maps-to="mock-instruction">
+            <div class="cw-block-header">
+              <span class="cw-block-label">Project instruction</span>
+              <span class="cw-block-tokens">~500 tokens</span>
+            </div>
+            <div class="cw-block-preview"># Puzzle PMM Project
+Tone: confident, not aggressive
+Audience: startup founders (seed–A)
+Competitor refs: QuickBooks, Xero
+Key differentiator: AI-first...</div>
+          </div>
+          <div class="cw-block cw-block-files" data-order="4" data-maps-to="mock-file-1">
+            <div class="cw-block-header">
+              <span class="cw-block-label" id="cw-files-label">research-synthesis.md + 3 files</span>
+              <span class="cw-block-tokens" id="cw-files-tokens">~15K tokens</span>
+            </div>
+            <div class="cw-block-preview">| Segment     | Pain      | Priority |
+|-------------|-----------|----------|
+| Seed stage  | Receipts  | High     |
+| Series A    | Reporting | Medium   |
+| Bootstrap   | Invoicing | High     |</div>
+          </div>
+          <div class="cw-block cw-block-history" data-order="5" data-maps-to="mock-history-1">
+            <div class="cw-block-header">
+              <span class="cw-block-label" id="cw-history-label">Conversation history</span>
+              <span class="cw-block-tokens" id="cw-history-tokens">~2K tokens</span>
+            </div>
+            <div class="cw-block-preview">User: Write a landing page for
+  startup founders switching...
+Asst: Here's a draft landing page
+  targeting startup founders...
+User: Make the hero more specific...</div>
+          </div>
+          <div class="cw-block cw-block-prompt" data-order="6" data-maps-to="mock-prompt">
+            <div class="cw-block-header">
+              <span class="cw-block-label">Your prompt</span>
+              <span class="cw-block-tokens">~30 tokens</span>
+            </div>
+            <div class="cw-block-preview">Now write a comparison section:
+Puzzle vs QuickBooks</div>
+          </div>
+        </div>
+
+        <div class="cw-capacity">
+          <div class="cw-capacity-bar">
+            <div class="cw-capacity-fill" id="cw-capacity-fill"></div>
+          </div>
+          <p class="cw-capacity-label" id="cw-capacity-label">Context window capacity</p>
+        </div>
+      </div>
+      <!-- Connector lines drawn via SVG overlay -->
+      <svg class="cw-connectors" id="cw-connectors" aria-hidden="true"></svg>
+    </div>
+
+    <p class="theory-insight" style="margin-top: var(--space-lg); max-width: 32em;">Your files are the biggest lever you control. Everything else is set by the tool.</p>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- === SECTION 03: THE DEMO (THREE PANELS)    === -->
+<!-- ============================================= -->
+<section class="section demo" id="demo">
+  <span class="section-number">03</span>
+  <div class="section-inner">
+    <h2>Same prompt. Three levels&nbsp;of&nbsp;context.</h2>
+
+    <div class="prompt-bar">
+      <span>&gt;</span> Write a competitive positioning paragraph for Puzzle against QuickBooks targeting startup founders.
+    </div>
+
+    <div class="panels">
+      <!-- Panel 1: No Context -->
+      <div class="panel" id="panel-1">
+        <div class="terminal-bar">
+          <div class="terminal-dots">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+          </div>
+          <span class="terminal-title">No Context</span>
+        </div>
+        <div class="panel-context-viz" id="empty-viz">
+          <div class="context-dropzone">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="rgba(212,208,204,0.3)" stroke-width="1.5">
+              <rect x="6" y="4" width="24" height="28" rx="2"/>
+              <line x1="12" y1="12" x2="24" y2="12"/>
+              <line x1="12" y1="17" x2="22" y2="17"/>
+              <line x1="12" y1="22" x2="18" y2="22"/>
+            </svg>
+            <span>No context provided</span>
+          </div>
+        </div>
+        <div class="panel-header">
+          <h3>No Context</h3>
+        </div>
+        <div class="panel-body">
+          <span class="typed-text" id="typed-1"></span>
+        </div>
+      </div>
+
+      <!-- Panel 2: Raw Data Dump -->
+      <div class="panel" id="panel-2">
+        <div class="terminal-bar">
+          <div class="terminal-dots">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+          </div>
+          <span class="terminal-title">Raw Data Dump</span>
+        </div>
+        <div class="panel-context-viz" id="chaos-viz">
+          <span class="context-chaos-item" style="top:12px;left:6%;transform:rotate(-8deg)">pitch_deck_v3.pdf</span>
+          <span class="context-chaos-item" style="top:38px;left:38%;transform:rotate(5deg)">call_transcript_oct.txt</span>
+          <span class="context-chaos-item" style="top:70px;left:10%;transform:rotate(-3deg)">brand_guide_2024.pdf</span>
+          <span class="context-chaos-item" style="top:18px;left:62%;transform:rotate(12deg)">notes_q3.docx</span>
+          <span class="context-chaos-item" style="top:90px;left:48%;transform:rotate(-6deg)">competitor_matrix.xlsx</span>
+          <span class="context-chaos-item" style="top:55px;left:65%;transform:rotate(3deg)">slack_thread.txt</span>
+          <span class="context-chaos-item" style="top:120px;left:22%;transform:rotate(7deg)">pricing_old.pdf</span>
+          <span class="context-chaos-item overflow-item" style="top:145px;left:5%;transform:rotate(-2deg)">roadmap_draft.docx</span>
+          <span class="context-chaos-item overflow-item" style="top:148px;left:50%;transform:rotate(4deg)">email_chain.eml</span>
+          <span class="context-chaos-item overflow-item" style="top:155px;left:28%;transform:rotate(-5deg)">board_deck.pptx</span>
+          <div class="context-overflow-bar">context limit exceeded</div>
+        </div>
+        <div class="panel-header">
+          <h3>Raw Data Dump</h3>
+          <p class="panel-context">15 unstructured docs thrown in</p>
+        </div>
+        <div class="panel-body">
+          <span class="typed-text" id="typed-2"></span>
+        </div>
+      </div>
+
+      <!-- Panel 3: Curated Context -->
+      <div class="panel" id="panel-3">
+        <div class="terminal-bar">
+          <div class="terminal-dots">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot yellow"></span>
+            <span class="terminal-dot green"></span>
+          </div>
+          <span class="terminal-title">Curated Context</span>
+        </div>
+        <div class="panel-context-viz" id="clean-viz">
+          <div class="context-clean-grid">
+            <span class="context-clean-item">
+              <span class="context-clean-check"><svg viewBox="0 0 10 10" fill="none" stroke="#28c840" stroke-width="2" stroke-linecap="round"><polyline points="2,5.5 4.5,8 8,3"/></svg></span>
+              Research Synthesis
+            </span>
+            <span class="context-clean-item">
+              <span class="context-clean-check"><svg viewBox="0 0 10 10" fill="none" stroke="#28c840" stroke-width="2" stroke-linecap="round"><polyline points="2,5.5 4.5,8 8,3"/></svg></span>
+              M&amp;P Brief
+            </span>
+            <span class="context-clean-item">
+              <span class="context-clean-check"><svg viewBox="0 0 10 10" fill="none" stroke="#28c840" stroke-width="2" stroke-linecap="round"><polyline points="2,5.5 4.5,8 8,3"/></svg></span>
+              ICP Profiles
+            </span>
+            <span class="context-clean-item">
+              <span class="context-clean-check"><svg viewBox="0 0 10 10" fill="none" stroke="#28c840" stroke-width="2" stroke-linecap="round"><polyline points="2,5.5 4.5,8 8,3"/></svg></span>
+              Proof Library
+            </span>
+          </div>
+        </div>
+        <div class="panel-header">
+          <h3>Curated Context</h3>
+          <p class="panel-context">6 synthesized artifacts</p>
+        </div>
+        <div class="panel-body">
+          <span class="typed-text" id="typed-3"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnostic callout -->
+    <div class="diagnostic" id="diagnostic">
+      <h3>What did the curated version do differently?</h3>
+      <ul>
+        <li>Used real customer language ("huge time saver") from actual calls</li>
+        <li>Cited specific data (232 calls, #1 pain point)</li>
+        <li>Knew the competitive angle without being told</li>
+        <li>Hit the audience (startup founders tracking burn rate)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- === SECTION 04: THE NEW HIRE               === -->
+<!-- ============================================= -->
+<section class="section newhire" id="newhire">
+  <span class="section-number">04</span>
+  <div class="section-inner">
+    <h2>The "New Hire" Test</h2>
+    <p>Imagine you're a new hire. First day. Someone walks you to your desk and says <em>"build our landing page."</em></p>
+
+    <div class="newhire-grid">
+      <div class="scenario scenario-a">
+        <span class="scenario-label">Scenario A</span>
+        <!-- SVG: Overwhelmed person -->
+        <div class="line-art-illustration">
+          <svg viewBox="0 0 240 140" class="line-art" xmlns="http://www.w3.org/2000/svg">
+            <!-- Person (head in hands) -->
+            <circle cx="120" cy="38" r="16"/>
+            <path d="M104 54 L100 90 L140 90 L136 54"/>
+            <!-- Arms up to head -->
+            <path d="M100 62 L88 45 L105 35"/>
+            <path d="M140 62 L152 45 L135 35"/>
+            <!-- Desk -->
+            <line x1="50" y1="90" x2="190" y2="90"/>
+            <line x1="60" y1="90" x2="55" y2="130"/>
+            <line x1="180" y1="90" x2="185" y2="130"/>
+            <!-- Scattered papers -->
+            <rect x="30" y="72" width="28" height="20" rx="2" transform="rotate(-15 44 82)" class="muted-stroke"/>
+            <rect x="160" y="68" width="28" height="20" rx="2" transform="rotate(12 174 78)" class="muted-stroke"/>
+            <rect x="70" y="65" width="22" height="16" rx="2" transform="rotate(-8 81 73)" class="muted-stroke"/>
+            <rect x="148" y="80" width="22" height="16" rx="2" transform="rotate(5 159 88)" class="muted-stroke"/>
+            <!-- Box dumping papers -->
+            <rect x="185" y="38" width="35" height="28" rx="2" transform="rotate(25 202 52)"/>
+            <rect x="195" y="20" width="18" height="12" rx="1" transform="rotate(-20 204 26)" class="muted-stroke"/>
+            <rect x="210" y="30" width="16" height="10" rx="1" transform="rotate(15 218 35)" class="muted-stroke"/>
+            <!-- Stress lines -->
+            <line x1="95" y1="25" x2="88" y2="18" class="muted-stroke"/>
+            <line x1="145" y1="25" x2="152" y2="18" class="muted-stroke"/>
+            <line x1="120" y1="18" x2="120" y2="10" class="muted-stroke"/>
+          </svg>
+        </div>
+        <p>They dump 50 call recordings on your desk. <em>"Everything you need is in here."</em> Could you build that landing page? In a month, if you're lucky.</p>
+      </div>
+
+      <div class="scenario scenario-b">
+        <span class="scenario-label">Scenario B</span>
+        <!-- SVG: Productive person -->
+        <div class="line-art-illustration">
+          <svg viewBox="0 0 240 140" class="line-art" xmlns="http://www.w3.org/2000/svg">
+            <!-- Person (sitting upright, relaxed) -->
+            <circle cx="100" cy="38" r="16"/>
+            <path d="M84 54 L80 90 L120 90 L116 54"/>
+            <!-- Arms on desk -->
+            <path d="M84 62 L70 80 L80 90"/>
+            <path d="M116 62 L130 75 L140 80"/>
+            <!-- Desk -->
+            <line x1="50" y1="90" x2="210" y2="90"/>
+            <line x1="60" y1="90" x2="55" y2="130"/>
+            <line x1="200" y1="90" x2="205" y2="130"/>
+            <!-- Neat binder with tabs -->
+            <rect x="145" y="52" width="50" height="36" rx="3"/>
+            <line x1="145" y1="60" x2="195" y2="60" class="accent-stroke" stroke-width="1.4"/>
+            <line x1="145" y1="68" x2="195" y2="68" class="muted-stroke"/>
+            <line x1="145" y1="76" x2="195" y2="76" class="muted-stroke"/>
+            <!-- Tabs on binder -->
+            <rect x="196" y="54" width="10" height="8" rx="1" class="accent-stroke"/>
+            <rect x="196" y="64" width="10" height="8" rx="1" class="accent-stroke"/>
+            <rect x="196" y="74" width="10" height="8" rx="1" class="accent-stroke"/>
+            <!-- Checkmark floating above -->
+            <path d="M160 30 L168 40 L185 18" class="accent-stroke" stroke-width="2.5"/>
+            <!-- Small neat doc on desk -->
+            <rect x="70" y="78" width="24" height="12" rx="1" class="muted-stroke"/>
+            <line x1="74" y1="83" x2="90" y2="83" class="muted-stroke"/>
+            <line x1="74" y1="87" x2="86" y2="87" class="muted-stroke"/>
+          </svg>
+        </div>
+        <p>They hand you a synthesized messaging doc. Key themes, representative quotes, positioning pillars, audience profiles. You could start <em>today.</em></p>
+      </div>
+    </div>
+
+    <p class="newhire-cta">"What would a new hire need on day one to do great work? Build that."</p>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- === SECTION 05: ARTIFACT SYSTEM             === -->
+<!-- ============================================= -->
+<section class="section artifacts" id="artifacts">
+  <span class="section-number">05</span>
+  <div class="section-inner">
+    <h2>What you're building</h2>
+
+    <div class="artifacts-grid" id="artifacts-grid">
+
+      <!-- Card: Customer Research Synthesis -->
+      <div class="artifact-card" data-artifact="research">
+        <div class="doc-mini">
+          <div class="doc-page">
+            <div class="doc-accent-bar" style="background: var(--accent);"></div>
+            <div class="doc-squiggles">
+              <div class="doc-squiggle" style="width:90%"></div>
+              <div class="doc-squiggle" style="width:70%"></div>
+              <div class="doc-squiggle" style="width:85%"></div>
+              <div class="doc-squiggle" style="width:60%"></div>
+              <div class="doc-squiggle" style="width:75%"></div>
+              <div class="doc-squiggle" style="width:88%"></div>
+              <div class="doc-squiggle" style="width:65%"></div>
+              <div class="doc-squiggle" style="width:80%"></div>
+              <div class="doc-squiggle" style="width:55%"></div>
+            </div>
+          </div>
+        </div>
+        <h3>Customer Research Synthesis</h3>
+        <div class="doc-expanded">
+          <div class="doc-expanded-bar" style="background: var(--accent);"></div>
+          <div class="doc-expanded-inner">
+            <div class="doc-expanded-header">
+              <span class="doc-expanded-title">Customer Research Synthesis</span>
+              <button class="doc-close-btn" aria-label="Close">&times;</button>
+            </div>
+            <div class="doc-expanded-body">
+<pre>
+# Top pain points
+Source: 312 customer interviews
+
+| Pain Point          | Freq |
+|---------------------|------|
+| Manual status       | 74%  |
+| No source of truth  | 68%  |
+| Can't forecast gaps | 61%  |
+| Manual reporting    | 55%  |
+
+## Manual status updates (74%)
+> "I spend Monday mornings
+> copy-pasting between three apps."
+
+## No source of truth (68%)
+> "Nobody trusts the dashboard
+> because it's always stale."
+
+## Can't forecast gaps (61%)
+> "We only find out we're over
+> capacity when someone burns out."
+
+## Manual reporting (55%)
+> "Board prep takes my ops lead
+> two full days every quarter."
+</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Messaging & Positioning -->
+      <div class="artifact-card" data-artifact="messaging">
+        <div class="doc-mini">
+          <div class="doc-page">
+            <div class="doc-accent-bar" style="background: #8B6914;"></div>
+            <div class="doc-squiggles">
+              <div class="doc-squiggle" style="width:80%"></div>
+              <div class="doc-squiggle" style="width:95%"></div>
+              <div class="doc-squiggle" style="width:65%"></div>
+              <div class="doc-squiggle" style="width:88%"></div>
+              <div class="doc-squiggle" style="width:72%"></div>
+              <div class="doc-squiggle" style="width:90%"></div>
+              <div class="doc-squiggle" style="width:58%"></div>
+              <div class="doc-squiggle" style="width:82%"></div>
+              <div class="doc-squiggle" style="width:68%"></div>
+            </div>
+          </div>
+        </div>
+        <h3>Messaging &amp; Positioning</h3>
+        <div class="doc-expanded">
+          <div class="doc-expanded-bar" style="background: #8B6914;"></div>
+          <div class="doc-expanded-inner">
+            <div class="doc-expanded-header">
+              <span class="doc-expanded-title">Messaging &amp; Positioning</span>
+              <button class="doc-close-btn" aria-label="Close">&times;</button>
+            </div>
+            <div class="doc-expanded-body">
+<pre>
+# Messaging pillars
+
+| Pillar       | Problem        | Solution     |
+|--------------|----------------|--------------|
+| Visibility   | Manual status  | Live health  |
+| Resources    | Late gaps      | Forecasting  |
+| Reporting    | Manual prep    | Auto reports |
+
+## Automatic visibility
+Problem:  Status updates are manual/stale
+Solution: Live health from WIP data
+Win: No behavior change required
+
+## Resource intelligence
+Problem:  Capacity gaps surface too late
+Solution: Predictive workload forecasting
+Win: Forecasts 3wk out vs. backward
+  looking reports
+
+## One-click reporting
+Problem:  Board reporting is busywork
+Solution: Auto-generated portfolio reports
+Win: Two-day prep becomes 5-min export
+</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: ICP Profiles -->
+      <div class="artifact-card" data-artifact="icp">
+        <div class="doc-mini">
+          <div class="doc-page">
+            <div class="doc-accent-bar" style="background: #3D7A4A;"></div>
+            <div class="doc-squiggles">
+              <div class="doc-squiggle" style="width:75%"></div>
+              <div class="doc-squiggle" style="width:90%"></div>
+              <div class="doc-squiggle" style="width:55%"></div>
+              <div class="doc-squiggle" style="width:80%"></div>
+              <div class="doc-squiggle" style="width:65%"></div>
+              <div class="doc-squiggle" style="width:85%"></div>
+              <div class="doc-squiggle" style="width:72%"></div>
+              <div class="doc-squiggle" style="width:92%"></div>
+              <div class="doc-squiggle" style="width:58%"></div>
+            </div>
+          </div>
+        </div>
+        <h3>ICP Profiles</h3>
+        <div class="doc-expanded">
+          <div class="doc-expanded-bar" style="background: #3D7A4A;"></div>
+          <div class="doc-expanded-inner">
+            <div class="doc-expanded-header">
+              <span class="doc-expanded-title">ICP Profiles</span>
+              <button class="doc-close-btn" aria-label="Close">&times;</button>
+            </div>
+            <div class="doc-expanded-body">
+<pre>
+# ICP #1 — Growth-stage ops leader
+
+| Attribute    | Detail               |
+|--------------|----------------------|
+| Company      | 50–300, Series B–C   |
+| Role         | VP Ops, PMO, CoS     |
+| Pain         | 15+ projects, no view|
+| Trigger      | Missed deadline      |
+| Tools today  | Sheets + legacy PM   |
+
+## Company size
+50–300 employees, Series B–C
+
+## Role
+VP Ops, Head of PMO, Chief of Staff
+
+## Core pain
+Managing 15+ concurrent projects
+across 4–6 teams with no unified view
+
+## Buying trigger
+Missed deadline on a high-visibility
+initiative; leadership demands better
+forecasting
+
+## Current tools
+Spreadsheets + legacy PM tool they've
+outgrown
+</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Social Proof Library -->
+      <div class="artifact-card" data-artifact="proof">
+        <div class="doc-mini">
+          <div class="doc-page">
+            <div class="doc-accent-bar" style="background: #5A6B4A;"></div>
+            <div class="doc-squiggles">
+              <div class="doc-squiggle" style="width:85%"></div>
+              <div class="doc-squiggle" style="width:70%"></div>
+              <div class="doc-squiggle" style="width:92%"></div>
+              <div class="doc-squiggle" style="width:60%"></div>
+              <div class="doc-squiggle" style="width:78%"></div>
+              <div class="doc-squiggle" style="width:88%"></div>
+              <div class="doc-squiggle" style="width:55%"></div>
+              <div class="doc-squiggle" style="width:72%"></div>
+              <div class="doc-squiggle" style="width:65%"></div>
+            </div>
+          </div>
+        </div>
+        <h3>Social Proof Library</h3>
+        <div class="doc-expanded">
+          <div class="doc-expanded-bar" style="background: #5A6B4A;"></div>
+          <div class="doc-expanded-inner">
+            <div class="doc-expanded-header">
+              <span class="doc-expanded-title">Social Proof Library</span>
+              <button class="doc-close-btn" aria-label="Close">&times;</button>
+            </div>
+            <div class="doc-expanded-body">
+<pre>
+# Quotes — Time Savings theme
+
+| Name           | Role       | Company    |
+|----------------|------------|------------|
+| Jamie Torres   | VP Ops     | BrightPath |
+| Priya Sharma   | CoS        | Relay      |
+| Marcus Lee     | Head PMO   | Upwell     |
+
+## Jamie Torres — VP Ops, BrightPath
+> "We eliminated our Monday status
+> meeting entirely."
+
+## Priya Sharma — CoS, Relay
+> "Board reporting went from two
+> days to five minutes."
+
+## Marcus Lee — Head PMO, Upwell
+> "I stopped dreading quarterly
+> planning."
+</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Competitive Intelligence -->
+      <div class="artifact-card" data-artifact="competitive">
+        <div class="doc-mini">
+          <div class="doc-page">
+            <div class="doc-accent-bar" style="background: #4A5A6B;"></div>
+            <div class="doc-squiggles">
+              <div class="doc-squiggle" style="width:88%"></div>
+              <div class="doc-squiggle" style="width:72%"></div>
+              <div class="doc-squiggle" style="width:95%"></div>
+              <div class="doc-squiggle" style="width:68%"></div>
+              <div class="doc-squiggle" style="width:82%"></div>
+              <div class="doc-squiggle" style="width:60%"></div>
+              <div class="doc-squiggle" style="width:90%"></div>
+              <div class="doc-squiggle" style="width:75%"></div>
+              <div class="doc-squiggle" style="width:55%"></div>
+            </div>
+          </div>
+        </div>
+        <h3>Competitive Intelligence</h3>
+        <div class="doc-expanded">
+          <div class="doc-expanded-bar" style="background: #4A5A6B;"></div>
+          <div class="doc-expanded-inner">
+            <div class="doc-expanded-header">
+              <span class="doc-expanded-title">Competitive Intelligence</span>
+              <button class="doc-close-btn" aria-label="Close">&times;</button>
+            </div>
+            <div class="doc-expanded-body">
+<pre>
+# Head-to-head: Legacy PM Tool
+
+| Pain Point     | Sev  | Win  |
+|----------------|------|------|
+| Manual status  | 9/10 | 82%  |
+| No forecasting | 8/10 | 76%  |
+| Rigid reports  | 7/10 | 71%  |
+
+## Manual status collection (9/10)
+Win rate: 82%
+Our fix: Auto-generated from work
+  activity
+
+## No capacity forecasting (8/10)
+Win rate: 76%
+Our fix: 3-week predictive workload
+  model
+
+## Rigid reporting templates (7/10)
+Win rate: 71%
+Our fix: Configurable live dashboards
+
+---
+> "We evaluated three tools. The
+> others showed us dashboards — this
+> one showed us the future."
+</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Voice & Tone Guide -->
+      <div class="artifact-card" data-artifact="voice">
+        <div class="doc-mini">
+          <div class="doc-page">
+            <div class="doc-accent-bar" style="background: #7A5B3A;"></div>
+            <div class="doc-squiggles">
+              <div class="doc-squiggle" style="width:78%"></div>
+              <div class="doc-squiggle" style="width:90%"></div>
+              <div class="doc-squiggle" style="width:60%"></div>
+              <div class="doc-squiggle" style="width:85%"></div>
+              <div class="doc-squiggle" style="width:70%"></div>
+              <div class="doc-squiggle" style="width:92%"></div>
+              <div class="doc-squiggle" style="width:62%"></div>
+              <div class="doc-squiggle" style="width:80%"></div>
+              <div class="doc-squiggle" style="width:55%"></div>
+            </div>
+          </div>
+        </div>
+        <h3>Voice &amp; Tone Guide</h3>
+        <div class="doc-expanded">
+          <div class="doc-expanded-bar" style="background: #7A5B3A;"></div>
+          <div class="doc-expanded-inner">
+            <div class="doc-expanded-header">
+              <span class="doc-expanded-title">Voice &amp; Tone Guide</span>
+              <button class="doc-close-btn" aria-label="Close">&times;</button>
+            </div>
+            <div class="doc-expanded-body">
+<pre>
+# Voice calibration examples
+
+| Context     | Say ✓     | Avoid ✗     |
+|-------------|-----------|-------------|
+| Product     | Concrete  | Buzzwords   |
+| Competitive | Specific  | Vague       |
+| Proof       | Data      | Generic     |
+
+## Describing the product
+✓ "Cuts Monday status meetings
+   to zero"
+✗ "Leverages AI to transform
+   project visibility"
+
+## Competitive positioning
+✓ "Teams switch because their old
+   tool can't forecast"
+✗ "Innovative disruption in the
+   PM landscape"
+
+## Customer proof
+✓ "Board prep went from two days
+   to five minutes"
+✗ "Customers report significant
+   efficiency gains"
+</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Dependency diagram — relationship tree -->
+    <div class="artifact-dependencies">
+      <p class="dep-diagram-label">How the artifacts connect</p>
+      <svg class="artifact-dep-svg" viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- ===== TIER LABELS ===== -->
+        <text x="28" y="62" font-family="'Source Sans 3', sans-serif" font-size="13" font-weight="700" fill="var(--muted)" letter-spacing="1.5" text-anchor="start">QUALITY</text>
+        <text x="28" y="182" font-family="'Source Sans 3', sans-serif" font-size="13" font-weight="700" fill="var(--muted)" letter-spacing="1.5" text-anchor="start">STRUCTURE</text>
+        <text x="28" y="325" font-family="'Source Sans 3', sans-serif" font-size="13" font-weight="700" fill="var(--muted)" letter-spacing="1.5" text-anchor="start">FOUNDATION</text>
+
+        <!-- ===== BOTTOM TIER: Research ===== -->
+        <g class="dep-doc-icon" transform="translate(370, 290)">
+          <rect width="160" height="60" rx="5" fill="#fff" stroke="var(--accent)" stroke-width="2"/>
+          <rect width="160" height="7" rx="5 5 0 0" fill="var(--accent)"/>
+          <rect x="16" y="18" width="80" height="4" rx="2" fill="#ddd"/>
+          <rect x="16" y="28" width="60" height="4" rx="2" fill="#ddd"/>
+          <rect x="16" y="38" width="90" height="4" rx="2" fill="#ddd"/>
+          <rect x="16" y="48" width="50" height="4" rx="2" fill="#ddd"/>
+          <text x="80" y="38" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="0" fill="transparent">.</text>
+        </g>
+        <text x="450" y="370" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="15" font-weight="700" fill="var(--accent)">Customer Research</text>
+
+        <!-- ===== MIDDLE TIER: M&P and ICP ===== -->
+        <g class="dep-doc-icon" transform="translate(220, 150)">
+          <rect width="150" height="55" rx="5" fill="#fff" stroke="#8B6914" stroke-width="1.8"/>
+          <rect width="150" height="6" rx="5 5 0 0" fill="#8B6914"/>
+          <rect x="14" y="16" width="75" height="4" rx="2" fill="#ddd"/>
+          <rect x="14" y="26" width="55" height="4" rx="2" fill="#ddd"/>
+          <rect x="14" y="36" width="85" height="4" rx="2" fill="#ddd"/>
+        </g>
+        <text x="295" y="225" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="14" font-weight="600" fill="#8B6914">Messaging &amp; Positioning</text>
+
+        <g class="dep-doc-icon" transform="translate(530, 150)">
+          <rect width="150" height="55" rx="5" fill="#fff" stroke="#3D7A4A" stroke-width="1.8"/>
+          <rect width="150" height="6" rx="5 5 0 0" fill="#3D7A4A"/>
+          <rect x="14" y="16" width="70" height="4" rx="2" fill="#ddd"/>
+          <rect x="14" y="26" width="90" height="4" rx="2" fill="#ddd"/>
+          <rect x="14" y="36" width="60" height="4" rx="2" fill="#ddd"/>
+        </g>
+        <text x="605" y="225" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="14" font-weight="600" fill="#3D7A4A">ICP Profiles</text>
+
+        <!-- ===== TOP TIER: Voice, Social, Competitive ===== -->
+        <g class="dep-doc-icon" transform="translate(110, 30)">
+          <rect width="130" height="50" rx="5" fill="#fff" stroke="#7A5B3A" stroke-width="1.5"/>
+          <rect width="130" height="5" rx="5 5 0 0" fill="#7A5B3A"/>
+          <rect x="12" y="14" width="65" height="3.5" rx="2" fill="#ddd"/>
+          <rect x="12" y="22" width="50" height="3.5" rx="2" fill="#ddd"/>
+          <rect x="12" y="30" width="70" height="3.5" rx="2" fill="#ddd"/>
+        </g>
+        <text x="175" y="98" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="13" font-weight="600" fill="#7A5B3A">Voice &amp; Tone</text>
+
+        <g class="dep-doc-icon" transform="translate(385, 30)">
+          <rect width="130" height="50" rx="5" fill="#fff" stroke="#5A6B4A" stroke-width="1.5"/>
+          <rect width="130" height="5" rx="5 5 0 0" fill="#5A6B4A"/>
+          <rect x="12" y="14" width="70" height="3.5" rx="2" fill="#ddd"/>
+          <rect x="12" y="22" width="55" height="3.5" rx="2" fill="#ddd"/>
+          <rect x="12" y="30" width="80" height="3.5" rx="2" fill="#ddd"/>
+        </g>
+        <text x="450" y="98" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="13" font-weight="600" fill="#5A6B4A">Social Proof</text>
+
+        <g class="dep-doc-icon" transform="translate(660, 30)">
+          <rect width="130" height="50" rx="5" fill="#fff" stroke="#4A5A6B" stroke-width="1.5"/>
+          <rect width="130" height="5" rx="5 5 0 0" fill="#4A5A6B"/>
+          <rect x="12" y="14" width="60" height="3.5" rx="2" fill="#ddd"/>
+          <rect x="12" y="22" width="75" height="3.5" rx="2" fill="#ddd"/>
+          <rect x="12" y="30" width="50" height="3.5" rx="2" fill="#ddd"/>
+        </g>
+        <text x="725" y="98" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="13" font-weight="600" fill="#4A5A6B">Competitive Intel</text>
+
+        <!-- ===== CONNECTION LINES ===== -->
+        <!-- Research → M&P -->
+        <line class="dep-connection" x1="400" y1="290" x2="310" y2="210" stroke="var(--accent)" stroke-width="1.8" opacity="0.5"/>
+        <text x="335" y="258" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="11" fill="var(--muted)" transform="rotate(-25 335 258)">grounds</text>
+        <!-- Research → ICP -->
+        <line class="dep-connection" x1="500" y1="290" x2="590" y2="210" stroke="var(--accent)" stroke-width="1.8" opacity="0.5"/>
+        <text x="565" y="258" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="11" fill="var(--muted)" transform="rotate(25 565 258)">segments</text>
+        <!-- M&P ↔ ICP -->
+        <line class="dep-connection" x1="370" y1="178" x2="530" y2="178" stroke="var(--muted)" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.4"/>
+        <text x="450" y="172" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="11" fill="var(--muted)">informs each other</text>
+        <!-- M&P → Voice -->
+        <line class="dep-connection" x1="260" y1="150" x2="195" y2="85" stroke="#7A5B3A" stroke-width="1.5" opacity="0.4"/>
+        <text x="210" y="122" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="11" fill="var(--muted)" transform="rotate(-30 210 122)">calibrates</text>
+        <!-- M&P → Social Proof -->
+        <line class="dep-connection" x1="330" y1="150" x2="430" y2="85" stroke="#5A6B4A" stroke-width="1.5" opacity="0.4"/>
+        <text x="395" y="118" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="11" fill="var(--muted)" transform="rotate(20 395 118)">evidence for</text>
+        <!-- ICP → Competitive Intel -->
+        <line class="dep-connection" x1="650" y1="150" x2="710" y2="85" stroke="#4A5A6B" stroke-width="1.5" opacity="0.4"/>
+        <text x="695" y="122" text-anchor="middle" font-family="'Source Sans 3', sans-serif" font-size="11" fill="var(--muted)" transform="rotate(20 695 122)">differentiates</text>
+
+        <!-- Arrowheads (small triangles at end of each line) -->
+        <polygon points="308,212 315,205 302,207" fill="var(--accent)" opacity="0.5"/>
+        <polygon points="592,212 585,205 598,207" fill="var(--accent)" opacity="0.5"/>
+        <polygon points="193,87 200,80 188,82" fill="#7A5B3A" opacity="0.4"/>
+        <polygon points="432,87 425,80 438,82" fill="#5A6B4A" opacity="0.4"/>
+        <polygon points="712,87 705,80 718,82" fill="#4A5A6B" opacity="0.4"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- === SECTION 06: THREE RULES                 === -->
+<!-- ============================================= -->
+<section class="section threerules" id="threerules">
+  <span class="section-number">06</span>
+  <div class="section-inner">
+    <h2>Three rules of context management</h2>
+
+    <div class="rules-list">
+
+      <!-- Rule 1: Budget your context -->
+      <div class="rule-card">
+        <div class="rule-icon">
+          <svg viewBox="0 0 80 80" width="80" height="80" class="line-art" xmlns="http://www.w3.org/2000/svg">
+            <!-- Box/container -->
+            <rect x="12" y="20" width="56" height="50" rx="4"/>
+            <!-- Blocks inside, stacked -->
+            <rect x="18" y="45" width="18" height="12" rx="2" class="accent-stroke"/>
+            <rect x="40" y="45" width="18" height="12" rx="2" class="accent-stroke"/>
+            <rect x="18" y="30" width="18" height="12" rx="2" class="accent-stroke"/>
+            <rect x="40" y="30" width="18" height="12" rx="2" class="accent-stroke"/>
+            <!-- Overflowing blocks above the box -->
+            <rect x="22" y="10" width="16" height="10" rx="2" class="accent-stroke" stroke-dasharray="3 2"/>
+            <rect x="42" y="6" width="16" height="10" rx="2" class="accent-stroke" stroke-dasharray="3 2"/>
+            <!-- Overflow indicator lines -->
+            <line x1="30" y1="14" x2="30" y2="20" class="muted-stroke"/>
+            <line x1="50" y1="16" x2="50" y2="20" class="muted-stroke"/>
+          </svg>
+        </div>
+        <div class="rule-content">
+          <h3><span class="rule-num">Rule 1</span>Budget your context</h3>
+          <p>The context window isn't a filing cabinet&thinsp;&mdash;&thinsp;it's a budget. Every piece of context you add dilutes attention on everything else. And outdated context doesn't sit harmlessly&thinsp;&mdash;&thinsp;the model treats old positioning and superseded claims as current truth. If a token isn't current and earning its keep, cut it.</p>
+        </div>
+      </div>
+
+      <!-- Rule 2: Synthesize up, reference down -->
+      <div class="rule-card">
+        <div class="rule-icon">
+          <svg viewBox="0 0 80 80" width="80" height="80" class="line-art" xmlns="http://www.w3.org/2000/svg">
+            <!-- Pyramid with 3 layers -->
+            <polygon points="40,8 72,68 8,68"/>
+            <!-- Layer dividers -->
+            <line x1="24" y1="48" x2="56" y2="48"/>
+            <line x1="16" y1="58" x2="64" y2="58"/>
+            <!-- Top layer highlighted -->
+            <polygon points="40,8 52,38 28,38" class="accent-stroke" stroke-width="2.2"/>
+            <polygon points="40,14 48,34 32,34" class="accent-fill" opacity="0.15"/>
+            <circle cx="40" cy="24" r="2" class="accent-fill"/>
+            <circle cx="36" cy="52" r="1.5" class="muted-stroke" fill="none"/>
+            <circle cx="44" cy="52" r="1.5" class="muted-stroke" fill="none"/>
+            <circle cx="32" cy="62" r="1.5" class="muted-stroke" fill="none"/>
+            <circle cx="40" cy="62" r="1.5" class="muted-stroke" fill="none"/>
+            <circle cx="48" cy="62" r="1.5" class="muted-stroke" fill="none"/>
+          </svg>
+        </div>
+        <div class="rule-content">
+          <h3><span class="rule-num">Rule 2</span>Distill up, reference down</h3>
+          <p>Don't dump raw data. Distill it&thinsp;&mdash;&thinsp;reduce, concentrate, get to the essence. Keep curated summaries in the window and point to deeper sources when needed. Your AI navigates layers&thinsp;&mdash;&thinsp;don't flatten them.</p>
+        </div>
+      </div>
+
+      <!-- Rule 3: Test, review, iterate -->
+      <div class="rule-card">
+        <div class="rule-icon">
+          <svg viewBox="0 0 80 80" width="80" height="80" class="line-art" xmlns="http://www.w3.org/2000/svg">
+            <!-- Beaker/flask -->
+            <path d="M28 10 L28 32 L14 62 Q12 68 18 70 L62 70 Q68 68 66 62 L52 32 L52 10"/>
+            <line x1="24" y1="10" x2="56" y2="10"/>
+            <!-- Liquid level -->
+            <path d="M20 56 L60 56" class="accent-stroke" stroke-width="1.4"/>
+            <!-- Bubbles -->
+            <circle cx="35" cy="50" r="3" class="accent-stroke" stroke-width="1.2"/>
+            <circle cx="46" cy="46" r="2" class="accent-stroke" stroke-width="1.2"/>
+            <!-- Circular arrow (iterate) -->
+            <path d="M62 20 A16 16 0 1 1 46 8" class="accent-stroke" stroke-width="2" fill="none"/>
+            <polygon points="46,4 46,12 52,8" class="accent-fill"/>
+            <!-- Checkmark -->
+            <path d="M20 74 L26 80 L38 64" class="accent-stroke" stroke-width="2.5" fill="none"/>
+          </svg>
+        </div>
+        <div class="rule-content">
+          <h3><span class="rule-num">Rule 3</span>Test, review, iterate</h3>
+          <p>Don't build context in the dark. Run a real prompt, review what's wrong, build the context that fixes it. AI outputs are first drafts&thinsp;&mdash;&thinsp;unchecked output feeding back in creates compounding drift. Every layer you add should produce a measurable improvement.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- === SECTION 07: SYNTHESIS DEMO             === -->
+<!-- ============================================= -->
+<section class="section synthesis" id="synthesis">
+  <span class="section-number">07</span>
+  <div class="section-inner">
+    <h2>Watch: From raw calls to research synthesis</h2>
+
+    <div class="synthesis-pipeline">
+      <!-- Step 1: Raw transcripts -->
+      <div class="pipeline-step" id="pipe-step-1">
+        <p class="step-indicator">Step 1: Raw call transcripts</p>
+        <div class="transcript-blocks">
+          <div class="transcript-block transcript-raw">
+            <p class="block-label">Call #47 — 34 min</p>
+            <p>"Yeah so basically we were using QuickBooks and it was like, I don't know, I spent more time trying to figure out how to categorize things than actually doing the work, you know? And like, our accountant would always be like 'this isn't right' and we'd have to redo it..."</p>
+          </div>
+          <div class="transcript-block transcript-raw">
+            <p class="block-label">Call #112 — 28 min</p>
+            <p>"We looked at Xero too but honestly they're all the same, like you still need to know debits and credits and I'm a founder not an accountant, so I just... I'd put it off and then at quarter end it was this whole fire drill with our bookkeeper..."</p>
+          </div>
+          <div class="transcript-block transcript-raw">
+            <p class="block-label">Call #203 — 41 min</p>
+            <p>"The main thing for me was burn rate visibility. I'd go into board meetings and have to manually pull numbers from three different places, and half the time they didn't match. My investors would ask about runway and I'd be like, give me a day..."</p>
+          </div>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--muted); margin-top: 8px; font-style: italic;">232 calls &times; 30 min avg = ~100 hours of raw audio</p>
+      </div>
+
+      <div class="pipeline-connector">
+        <svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 L12 24" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3"/><polygon points="6,22 12,30 18,22" fill="var(--accent)"/></svg>
+      </div>
+
+      <!-- Step 2: Individual summaries as spreadsheet rows -->
+      <div class="pipeline-step" id="pipe-step-2">
+        <p class="step-indicator">Step 2: Individual call summaries</p>
+        <div class="summary-spreadsheet">
+          <table class="synth-table">
+            <thead>
+              <tr>
+                <th>Call</th>
+                <th>Pain points</th>
+                <th>Why Puzzle</th>
+                <th>Objections</th>
+                <th>Language</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="synth-table-row">
+                <td>#47</td>
+                <td>Manual categorization, accountant conflicts</td>
+                <td>AI automation</td>
+                <td>Migration worry</td>
+                <td>"more time categorizing than working"</td>
+              </tr>
+              <tr class="synth-table-row">
+                <td>#112</td>
+                <td>Accounting knowledge gap, quarter-end fire drills</td>
+                <td>No accounting needed</td>
+                <td>Xero comparison</td>
+                <td>"I'm a founder not an accountant"</td>
+              </tr>
+              <tr class="synth-table-row">
+                <td>#203</td>
+                <td>No real-time visibility, manual board reporting</td>
+                <td>Live metrics</td>
+                <td>Data accuracy</td>
+                <td>"give me a day" for runway</td>
+              </tr>
+              <tr class="synth-table-row synth-table-row-fade">
+                <td>#204</td>
+                <td>Reconciliation backlog, receipt management</td>
+                <td>Auto-categorize</td>
+                <td>Pricing</td>
+                <td>"huge time saver"</td>
+              </tr>
+              <tr class="synth-table-row synth-table-row-fade">
+                <td colspan="5" style="text-align: center; color: var(--muted); font-style: italic;">... 228 more rows</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="pipeline-connector">
+        <svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 L12 24" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3"/><polygon points="6,22 12,30 18,22" fill="var(--accent)"/></svg>
+      </div>
+
+      <!-- Step 3: Quantitative grouping -->
+      <div class="pipeline-step" id="pipe-step-3">
+        <p class="step-indicator">Step 3: Quantitative grouping</p>
+        <div class="grouped-block">
+          <div class="stat-bar-group">
+            <div class="stat-bar-row">
+              <span class="stat-bar-label">Manual categorization burden</span>
+              <span class="stat-bar-pct">81%</span>
+              <div class="stat-bar-track"><div class="stat-bar-fill" data-width="81%"></div></div>
+            </div>
+            <div class="stat-bar-row">
+              <span class="stat-bar-label">Accounting knowledge gap</span>
+              <span class="stat-bar-pct">67%</span>
+              <div class="stat-bar-track"><div class="stat-bar-fill" data-width="67%"></div></div>
+            </div>
+            <div class="stat-bar-row">
+              <span class="stat-bar-label">Time spent on bookkeeping</span>
+              <span class="stat-bar-pct">61%</span>
+              <div class="stat-bar-track"><div class="stat-bar-fill" data-width="61%"></div></div>
+            </div>
+            <div class="stat-bar-row">
+              <span class="stat-bar-label">No real-time financial visibility</span>
+              <span class="stat-bar-pct">54%</span>
+              <div class="stat-bar-track"><div class="stat-bar-fill" data-width="54%"></div></div>
+            </div>
+          </div>
+          <p style="font-size: 0.78rem; color: var(--muted); margin-top: 12px;">Themes ranked by frequency across 232 calls &mdash; "universal" (80%+), "common" (50-79%), "emerging" (&lt;50%)</p>
+        </div>
+      </div>
+
+      <div class="pipeline-connector">
+        <svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg"><path d="M12 2 L12 24" stroke="var(--accent)" stroke-width="2" stroke-dasharray="4 3"/><polygon points="6,22 12,30 18,22" fill="var(--accent)"/></svg>
+      </div>
+
+      <!-- Step 4: Final synthesis -->
+      <div class="pipeline-step" id="pipe-step-4">
+        <p class="step-indicator">Step 4: Final synthesis</p>
+        <div class="synthesis-block">
+          <div class="synthesis-block-header">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 1h5.5L10 3.5V11H2V1z" stroke="rgba(255,255,255,0.5)" stroke-width="0.8"/></svg>
+            <span>Customer Research Synthesis</span>
+          </div>
+          <div class="synthesis-block-body">
+            <span class="typed-text" id="typed-synthesis"></span>
+          </div>
+        </div>
+        <button class="example-report-btn example-report-btn-lg" onclick="document.getElementById('report-modal').style.display='flex'">View full Fab Lab report (fictional data)</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================= -->
+<!-- === SECTION 08: EXPERIMENT                 === -->
+<!-- ============================================= -->
+<section class="section diagnose" id="diagnose">
+  <span class="section-number">08</span>
+  <div class="section-inner">
+    <h2>Test, review, iterate &mdash; the refine loop you'll run live</h2>
+
+    <div style="display: flex; justify-content: center; margin: var(--space-lg) 0;">
+      <svg viewBox="0 0 80 80" width="160" height="160" class="line-art" xmlns="http://www.w3.org/2000/svg">
+        <!-- Beaker/flask -->
+        <path d="M28 10 L28 32 L14 62 Q12 68 18 70 L62 70 Q68 68 66 62 L52 32 L52 10"/>
+        <line x1="24" y1="10" x2="56" y2="10"/>
+        <!-- Liquid level -->
+        <path d="M20 56 L60 56" class="accent-stroke" stroke-width="1.4"/>
+        <!-- Bubbles -->
+        <circle cx="35" cy="50" r="3" class="accent-stroke" stroke-width="1.2"/>
+        <circle cx="46" cy="46" r="2" class="accent-stroke" stroke-width="1.2"/>
+        <!-- Circular arrow (iterate) -->
+        <path d="M62 20 A16 16 0 1 1 46 8" class="accent-stroke" stroke-width="2" fill="none"/>
+        <polygon points="46,4 46,12 52,8" class="accent-fill"/>
+        <!-- Checkmark -->
+        <path d="M20 74 L26 80 L38 64" class="accent-stroke" stroke-width="2.5" fill="none"/>
+      </svg>
+    </div>
+
+    <p style="font-size: 1.15rem; max-width: 38em; margin-bottom: var(--space-lg);">Your synthesis is a first draft, not a finished product. Review it, fix what's wrong, upload the improved version, and re-run the same prompt against the same input. The gap closes every round &mdash; this is the refine loop you'll run live today.</p>
+
+    <!-- Quality checklist -->
+    <table class="diag-table">
+      <thead>
+        <tr>
+          <th>Check</th>
+          <th>What to look for</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Quotes are real</td>
+          <td>Spot-check 3&ndash;5 against your original transcripts or reviews. If fabricated, fix them.</td>
+        </tr>
+        <tr>
+          <td>Numbers add up</td>
+          <td>Theme counts, percentages, sample sizes &mdash; do they match your actual data?</td>
+        </tr>
+        <tr>
+          <td>No hallucinated entities</td>
+          <td>Names, roles, company references should come from your data only.</td>
+        </tr>
+        <tr>
+          <td>What's missing?</td>
+          <td>What do you know from experience that the synthesis didn't capture? Add it.</td>
+        </tr>
+        <tr>
+          <td>Signal over noise</td>
+          <td>Would you cut this line if editing someone else's work? Cut it now.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-size: 1.1rem; max-width: 38em; margin-top: var(--space-lg);">Then: upload the reviewed synthesis, re-run the <strong>exact same prompt</strong>, and compare side by side. If the output is still generic &mdash; that's OK. Adding ICP and messaging context closes the next gap.</p>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- === SECTION 09: SHARING CONTEXT             === -->
+<!-- ============================================= -->
+<section class="section sharing-context" id="sharing-context">
+  <span class="section-number">09</span>
+  <div class="section-inner">
+    <h2>Where the team's context lives</h2>
+    <p style="font-size: 1.15rem; max-width: 44em; margin-bottom: var(--space-lg);">Codifying alone helps you. The work compounds once ICP, voice, win/loss, and launch retros live somewhere every PMM pulls from. Drive for Thursday. GitHub when you're ready.</p>
+
+    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: var(--space-sm);">Drive sync, in two beats</h3>
+<pre style="background: var(--code-bg); color: var(--code-text); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.95rem; line-height: 1.7; padding: var(--space-lg); border-radius: var(--radius); white-space: pre; overflow-x: auto; margin-bottom: var(--space-lg);"><code>PMM Team  (Shared Drive)
+  ├─ Q1 Launch/
+  │    project.md
+  ├─ Q2 Launch/
+  │    project.md
+  ├─ Brand Refresh/
+  │    project.md
+  └─ voice-and-tone.md            &larr; optional top-level reference</code></pre>
+
+    <ul style="font-size: 1.05rem; max-width: 50em; line-height: 1.7; margin-bottom: var(--space-lg);">
+      <li><strong>One Shared Drive per team. One folder per project.</strong> Each project folder has a <code>project.md</code> Claude reads. Cross-project references (voice, ICP) can sit as files at the top level.</li>
+      <li><strong>Markdown is the default.</strong> Plain <code>.md</code> files &mdash; Claude reads them natively. Use <code>.docx</code> only when you need live web co-editing in Drive; convert back to <code>.md</code> once redlining settles. <strong>Never <code>.gdoc</code></strong> &mdash; Claude can't read native Google Doc files.</li>
+      <li><strong>Permissions are per-folder.</strong> Lock down a project folder when only some people should touch it. Default Shared Drive permissions are fine for the rest.</li>
+    </ul>
+
+    <table class="diag-table" style="margin-bottom: var(--space-lg);">
+      <thead>
+        <tr>
+          <th>Near-term: <strong>Drive sync</strong></th>
+          <th>Long-term: <strong>GitHub</strong></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Works today, non-technical-friendly.</td>
+          <td>Real version control + review. See what changed, by whom, when.</td>
+        </tr>
+        <tr>
+          <td>Filesystem-level &mdash; Claude reads it as a local folder.</td>
+          <td>Branching: try a new ICP doc safely, merge when it's right.</td>
+        </tr>
+        <tr>
+          <td>Sync delay (seconds-to-minutes). Conflicts are manual.</td>
+          <td>Gating: who can change the library is a permission, not a convention.</td>
+        </tr>
+        <tr>
+          <td><strong>Recommended for Thursday.</strong></td>
+          <td><strong>Worth it once 2+ people are seriously maintaining context.</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-family: var(--font-serif); font-size: 1.15rem; max-width: 44em; color: var(--muted); font-style: italic;">Drive gets you to a working team library by Monday. GitHub is the move when the library is load-bearing and you don't trust convention to hold it.</p>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- === APPENDIX                                === -->
+<!-- ============================================= -->
+<section class="section appendix appendix-divider" id="appendix">
+  <span class="section-number">A</span>
+  <div class="section-inner">
+    <h2>Appendix</h2>
+    <p style="font-size: 1.15rem; max-width: 38em;">Reference material we didn't cover live. Useful when you want to go deeper after the session.</p>
+  </div>
+</section>
+
+<section class="section appendix" id="appendix-building-blocks">
+  <span class="section-number">A1</span>
+  <div class="section-inner">
+    <h2>The Claude Code primitives &mdash; for reference</h2>
+    <p style="font-size: 1.1rem; max-width: 44em; margin-bottom: var(--space-lg);">You can build everything in today's workshop using just CLAUDE.md and a skill. These are the rest of the toolbox for when you outgrow that.</p>
+
+    <table class="diag-table" style="margin-bottom: var(--space-lg);">
+      <thead>
+        <tr>
+          <th>Building block</th>
+          <th>What it is</th>
+          <th>When you reach for it</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>CLAUDE.md</strong></td>
+          <td>A project-level instruction file. Claude reads it before every turn. Hierarchical &mdash; global <code>~/.claude/CLAUDE.md</code> loads first, project-level <code>./CLAUDE.md</code> appends and overrides. Specificity wins.</td>
+          <td>Project conventions, "always do X / never do Y," paths to important files. <em>Not</em> a dumping ground &mdash; everything in here costs context tokens every turn.</td>
+          <td>Global <code>~/.claude/CLAUDE.md</code> for personal voice + working style. Project-level <code>./CLAUDE.md</code> for client-specific rules.</td>
+        </tr>
+        <tr>
+          <td><strong>Skills</strong></td>
+          <td>A folder with a <code>SKILL.md</code> describing a workflow + the supporting files Claude needs (templates, examples, prompts). Loaded on-demand by name.</td>
+          <td>Anything you do more than twice. <strong>This is the one you'll build today.</strong></td>
+          <td><code>customer-data-synthesis</code> skill ingests transcripts &rarr; produces a research synthesis. <code>weekly-update</code> skill drafts a Friday status note from your daily notes.</td>
+        </tr>
+        <tr>
+          <td><strong>Memory</strong></td>
+          <td>Auto-captured preferences and learnings, persisted across sessions. Claude writes, you review.</td>
+          <td>Personal taste, voice tells, recurring corrections. You don't author it directly &mdash; you review what Claude saved.</td>
+          <td>"Denny prefers fragments over full sentences when meaning survives."</td>
+        </tr>
+        <tr>
+          <td><strong>Hooks</strong></td>
+          <td>Scripts that run at lifecycle moments (before tool use, after stop, etc.).</td>
+          <td>Automation across sessions. Out of scope today.</td>
+          <td>"Every time I finish a session, run this script to log the work."</td>
+        </tr>
+        <tr>
+          <td><strong>MCP servers</strong></td>
+          <td>Connectors that give Claude live access to external tools (Drive, Gmail, Calendar, your DB).</td>
+          <td>When the workflow needs live data, not just static context.</td>
+          <td>Google Drive MCP for read-only access to the team's Shared Drive.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="font-family: var(--font-serif); font-size: 1.15rem; max-width: 44em; color: var(--muted); font-style: italic;">Don't put everything in CLAUDE.md. Workflow detail belongs in a skill. Reference material belongs in a folder Claude reads on demand.</p>
+  </div>
+</section>
+
+<section class="section appendix" id="appendix-personal-kb">
+  <span class="section-number">A2</span>
+  <div class="section-inner">
+    <h2>What a personal knowledge base looks like at scale</h2>
+    <p style="font-size: 1.1rem; max-width: 44em; margin-bottom: var(--space-lg);">Once you have one CLAUDE.md and a skill, the next move isn't more skills &mdash; it's structure. Progressive disclosure: load what's relevant for this work, ignore the rest.</p>
+
+<pre style="background: var(--code-bg); color: var(--code-text); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.95rem; line-height: 1.7; padding: var(--space-lg); border-radius: var(--radius); white-space: pre; overflow-x: auto; margin-bottom: var(--space-lg);"><code>~/.claude/
+  CLAUDE.md                  &larr; global: personal voice, working style, always-on
+  skills/                    &larr; global skills, available everywhere
+    voice-tells/
+    weekly-update/
+
+~/work/
+  CLAUDE.md                  &larr; work-wide: client roster, fiscal year, "don't paste PII"
+
+~/work/linkedin-pmm/         &larr; per-project
+  CLAUDE.md                  &larr; project-specific: stakeholders, this product area
+  context/                   &larr; reference material, loaded on demand
+    icp.md
+    messaging.md
+    voice-and-tone.md
+  skills/
+    monthly-gtm-update/      &larr; project-specific skill
+  drafts/                    &larr; scratch, Claude reads as needed
+
+~/work/trulioo/              &larr; different project, isolated context
+  CLAUDE.md                  &larr; Trulioo-specific
+  context/
+  skills/</code></pre>
+
+    <ul style="font-size: 1.05rem; max-width: 50em; line-height: 1.7; margin-bottom: var(--space-lg);">
+      <li><strong>Hierarchy = inheritance.</strong> Higher directories load first. Global <code>CLAUDE.md</code> sets baseline; project-level overrides for the work that needs it. Specificity wins.</li>
+      <li><strong>Skills load on demand.</strong> All your skills don't load every turn &mdash; only the one you invoke. So the library can grow without bloating context.</li>
+      <li><strong>Reference material lives in folders, not CLAUDE.md.</strong> Claude reads <code>context/icp.md</code> when it needs to. It doesn't pay the token cost every turn.</li>
+    </ul>
+
+    <p style="font-family: var(--font-serif); font-size: 1.15rem; max-width: 44em; color: var(--muted); font-style: italic;">This is "progressive disclosure" &mdash; load only what's relevant. The team library (Drive Sharing Guide) plugs into the same shape: shared context folder = the team's version of <code>context/</code>.</p>
+  </div>
+</section>
+
+
+<!-- Bottom nav -->
+<div class="pres-footer">
+  <a href="https://www.linkedin.com/in/dhollick/" target="_blank" rel="noopener" class="pres-nav-btn pres-nav-btn-linkedin"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="flex-shrink:0;"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>Connect with Denny on LinkedIn</a>
+</div>
+
+<!-- Skill anatomy modal -->
+<div class="report-modal-overlay" id="skill-modal" onclick="if(event.target===this)this.style.display='none'">
+  <div class="report-modal" style="max-width: 700px; height: auto; max-height: 85vh;">
+    <div class="report-modal-header">
+      <span class="report-modal-title">What's inside a skill?</span>
+      <button class="report-modal-close" onclick="document.getElementById('skill-modal').style.display='none'">&times;</button>
+    </div>
+    <div class="report-modal-body" style="padding: var(--space-lg);">
+      <p style="margin-bottom: var(--space-md); color: var(--muted);">A skill is a folder that tells Claude how to do a specific job. Here's what's inside:</p>
+      <pre style="background: var(--code-bg); color: var(--code-text); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.95rem; line-height: 2.2; padding: var(--space-lg); border-radius: var(--radius); white-space: pre; overflow-x: auto;">
+<span style="color: rgba(255,255,255,0.5);">customer-data-synthesis/</span>
+├── <a onclick="document.getElementById('claudemd-modal').style.display='flex'" style="color: var(--accent); cursor: pointer; text-decoration: underline; text-decoration-style: dashed; text-underline-offset: 3px;"><strong>CLAUDE.md</strong></a>
+├── <span style="color: rgba(255,255,255,0.5);">sub-skills/</span>
+│   ├── <strong style="color: #8B6914;">individual-analysis.md</strong>
+│   ├── <strong style="color: #8B6914;">cross-source-synthesis.md</strong>
+│   └── <strong style="color: #8B6914;">report-generation.md</strong>
+├── <span style="color: rgba(255,255,255,0.5);">scripts/</span>
+│   ├── <strong style="color: #3D7A4A;">run-analysis.sh</strong>
+│   └── <strong style="color: #3D7A4A;">validate-output.sh</strong>
+└── <span style="color: rgba(255,255,255,0.5);">examples/</span>
+    └── <strong style="color: #4A5A6B;">report_final.md</strong></pre>
+      <div style="margin-top: var(--space-md);">
+        <p><a onclick="document.getElementById('claudemd-modal').style.display='flex'" style="color: var(--accent); cursor: pointer; font-weight: 700; text-decoration: underline; text-decoration-style: dashed; text-underline-offset: 3px;">CLAUDE.md</a> is the core of every skill. It's just a prompt &mdash; a markdown file that tells Claude what to do, in what order, what quality bar to hit, and how to handle edge cases. Everything the skill does flows from this one file. No code required &mdash; just well-written instructions. <a onclick="document.getElementById('claudemd-modal').style.display='flex'" style="color: var(--accent); cursor: pointer; font-size: 0.92rem;">Click to see an example &rarr;</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLAUDE.md example modal -->
+<div class="report-modal-overlay" id="claudemd-modal" onclick="if(event.target===this)this.style.display='none'" style="z-index: 1001;">
+  <div class="report-modal" style="max-width: 720px; height: auto; max-height: 88vh;">
+    <div class="report-modal-header">
+      <span class="report-modal-title">CLAUDE.md — it's just a prompt</span>
+      <button class="report-modal-close" onclick="document.getElementById('claudemd-modal').style.display='none'">&times;</button>
+    </div>
+    <div style="flex: 1; overflow-y: auto; padding: 0;">
+      <div style="background: var(--code-bg); color: var(--code-text); font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.9; padding: var(--space-lg) var(--space-xl); min-height: 100%; white-space: pre-wrap; word-wrap: break-word;"><span style="color: rgba(255,255,255,0.4);"># Customer Data Synthesis Skill</span>
+
+You are a research analyst. Your job is to
+take raw customer data (call transcripts,
+surveys, reviews, support tickets) and
+produce a structured research synthesis.
+
+<span style="color: rgba(255,255,255,0.4);">## Process</span>
+
+1. Analyze each source individually
+   - Extract pain points, gains, quotes
+   - Tag by theme and sentiment
+   - Note the source type and lifecycle stage
+
+2. Cross-reference across all sources
+   - Group by theme, count frequency
+   - Identify patterns across segments
+   - Flag contradictions and outliers
+
+3. Synthesize into a final report
+   - TLDR with top 5 findings
+   - Detailed tables with representative quotes
+   - Segment analysis
+   - Recommended actions
+
+<span style="color: rgba(255,255,255,0.4);">## Quality rules</span>
+
+- Every claim needs a source citation
+- Every quote must be real, not fabricated
+- Frequency counts must be mathematically
+  consistent with the source data
+- If confidence is low, say so explicitly
+- Cut anything you'd edit out of someone
+  else's work
+
+<span style="color: rgba(255,255,255,0.4);">## Output format</span>
+
+Use the report template in examples/.
+Tables must include: Theme, Sentiment,
+Count, Prevalence, Confidence, and
+Representative Quotes.
+
+<span style="color: rgba(255,255,255,0.4);">## What NOT to do</span>
+
+- Don't invent quotes or data points
+- Don't merge distinct themes to simplify
+- Don't skip sources — every file matters
+- Don't editorialize — report what the
+  data says, not what you think it means</div>
+    </div>
+  </div>
+</div>
+
+<!-- Manual guide modal -->
+<div class="report-modal-overlay" id="manual-guide-modal" onclick="if(event.target===this)this.style.display='none'">
+  <div class="report-modal" style="max-width: 900px; height: auto; max-height: 90vh;">
+    <div class="report-modal-header">
+      <span class="report-modal-title">Manual guide — step-by-step process</span>
+      <button class="report-modal-close" onclick="document.getElementById('manual-guide-modal').style.display='none'">&times;</button>
+    </div>
+    <div style="flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; background: #1a1a1a; padding: var(--space-sm);">
+      <img src="manual-guide.gif" alt="Manual guide walkthrough" style="max-width: 100%; max-height: 80vh; border-radius: 4px;">
+    </div>
+  </div>
+</div>
+
+<!-- Report modal overlay -->
+<div class="report-modal-overlay" id="report-modal" onclick="if(event.target===this)this.style.display='none'">
+  <div class="report-modal">
+    <div class="report-modal-header">
+      <span class="report-modal-title">Fab Lab — Customer Insights Report (Fictional Data)</span>
+      <button class="report-modal-close" onclick="document.getElementById('report-modal').style.display='none'">&times;</button>
+    </div>
+    <div class="report-modal-body">
+<h1>Fab Lab — Customer Insights Report</h1>
+
+<h2>TLDR</h2>
+<p><strong>Fragmented tooling sprawl is the dominant buying driver:</strong> 56% of prospects cite consolidation as their primary reason to evaluate Fab Lab, but current limitations in reporting, enterprise features, and mobile reliability are eroding satisfaction and fueling churn.</p>
+<p><strong>Calibration:</strong> 836 individual responses · 26 source types · Q1 2025 – Q4 2025</p>
+<blockquote>"We've basically been duct-taping things together...half the team uses Intercom, half replies from Gmail. Fab Lab promised to be the single pane of glass." — Claritask (sales_01)</blockquote>
+
+<h3>What the data says</h3>
+<ol>
+<li><strong>Tool consolidation pressure is universal</strong> and drives evaluation, but delivery gaps are creating buyer's remorse. [HIGH · n=27]</li>
+<li><strong>Reporting and analytics are the #1 unmet need</strong> and the #2 churn reason. 54% of sources flag reporting limitations. [HIGH · n=29]</li>
+<li><strong>Enterprise auth gaps</strong> (SSO, RBAC, audit logs) appear in 31% of sources, blocking deals and driving churn in regulated verticals. [MEDIUM · n=17]</li>
+<li><strong>Mobile app instability</strong> is creating operational friction and eroding trust. 35% of established customers report crashes. [MEDIUM · n=20]</li>
+<li><strong>Zendesk, Intercom, and Freshdesk</strong> remain primary threats. Fab Lab wins on speed/UX but loses on maturity and feature depth. [MEDIUM · n=18]</li>
+</ol>
+
+<h3>What to do about it</h3>
+<ol>
+<li>Prioritize reporting delivery (Q2–Q3 2026)</li>
+<li>Launch enterprise features package (SSO + RBAC)</li>
+<li>Stabilize mobile app by Q2 2026</li>
+<li>GTM campaign targeting Zendesk customers</li>
+<li>Churn prevention task force for high-risk segments</li>
+</ol>
+
+<hr>
+
+<h2>Detailed Findings</h2>
+
+<h3>RQ1: What drives customers to seek Fab Lab?</h3>
+<table><thead><tr><th>Theme</th><th>Count</th><th>Prev</th><th>Representative Quote</th></tr></thead><tbody>
+<tr><td>Tooling consolidation</td><td>27</td><td>56%</td><td><em>"We've basically been duct-taping things together"</em> — Claritask</td></tr>
+<tr><td>Manual health scoring</td><td>16</td><td>33%</td><td><em>"We have no way to flag at-risk customers without eyeballing data"</em> — sales_02</td></tr>
+<tr><td>Support volume scale</td><td>12</td><td>25%</td><td><em>"Our support team is drowning. We handle support in four different places"</em> — sales_03</td></tr>
+<tr><td>Cost vs. incumbents</td><td>11</td><td>23%</td><td><em>"Zendesk was $250K/year. Fab Lab will cut that in half"</em> — sales_04</td></tr>
+<tr><td>Response time delays</td><td>10</td><td>21%</td><td><em>"We're missing customer messages because we don't have a single inbox"</em> — sales_05</td></tr>
+<tr><td>Sales time on ops</td><td>8</td><td>17%</td><td><em>"I'm manually reviewing tickets every morning instead of working on strategy"</em> — sales_06</td></tr>
+</tbody></table>
+
+<h3>RQ2: What does Fab Lab do well?</h3>
+<table><thead><tr><th>Theme</th><th>Count</th><th>Prev</th><th>Representative Quote</th></tr></thead><tbody>
+<tr><td>Unified inbox</td><td>23</td><td>41%</td><td><em>"The unified inbox has been genuinely transformative...Saved probably $180K in ARR"</em> — Arcline Software</td></tr>
+<tr><td>Health scoring</td><td>19</td><td>34%</td><td><em>"Health scoring has made our CSM team way more proactive"</em> — renewal_16</td></tr>
+<tr><td>Implementation speed</td><td>18</td><td>32%</td><td><em>"We had value in 2 weeks. With Zendesk, it was 3 months"</em> — renewal_17</td></tr>
+<tr><td>Support team quality</td><td>16</td><td>29%</td><td><em>"The onboarding team was fantastic. They understood our workflow"</em> — renewal_18</td></tr>
+<tr><td>Intuitive UI</td><td>15</td><td>27%</td><td><em>"Our team picked it up immediately. Much less friction than Zendesk"</em> — survey_01</td></tr>
+</tbody></table>
+
+<h3>RQ3: What's missing or broken?</h3>
+<table><thead><tr><th>Theme</th><th>Count</th><th>Prev</th><th>Representative Quote</th></tr></thead><tbody>
+<tr><td>Reporting limits</td><td>29</td><td>54%</td><td><em>"Reporting is the biggest gap vs. Zendesk"</em> — churn_21</td></tr>
+<tr><td>Mobile app crashes</td><td>20</td><td>37%</td><td><em>"Mobile app crashes when we're on customer calls. It's unreliable"</em> — survey_01</td></tr>
+<tr><td>Enterprise auth gaps</td><td>17</td><td>31%</td><td><em>"We can't implement this without SSO. Our security team won't approve it"</em> — sales_08</td></tr>
+<tr><td>Integration depth</td><td>15</td><td>28%</td><td><em>"We can't sync Salesforce back to Fab Lab. It's read-only"</em> — support_q3</td></tr>
+<tr><td>KB search relevance</td><td>13</td><td>24%</td><td><em>"Search is useless. We have 500 KB articles but people can't find anything"</em> — support_q1</td></tr>
+<tr><td>Multi-tenant gaps</td><td>11</td><td>20%</td><td><em>"We manage 30 client accounts but can't give them separate Fab Lab instances"</em> — sales_09</td></tr>
+</tbody></table>
+
+<h3>RQ4: Competitive evaluation</h3>
+<table><thead><tr><th>Competitor</th><th>Win Rate</th><th>Fab Lab Wins On</th><th>Representative Quote</th></tr></thead><tbody>
+<tr><td>Zendesk</td><td>60%</td><td>Cost, speed, UX</td><td><em>"Zendesk is bloated but has everything. Fab Lab is cleaner but immature."</em> — winloss_01</td></tr>
+<tr><td>Intercom</td><td>55%</td><td>Consolidation, cost</td><td><em>"Intercom's bot is better, but Fab Lab's human support is faster and cheaper"</em> — sales_11</td></tr>
+<tr><td>Freshdesk</td><td>Mixed</td><td>Speed, UX</td><td><em>"Freshdesk is better for IT/MSP use cases. Fab Lab for mid-market SaaS."</em> — winloss_01</td></tr>
+<tr><td>ServiceNow</td><td>N/A</td><td>Mid-market focus</td><td><em>"ServiceNow is locked in at the enterprise level. That's not our market."</em> — cab_q2</td></tr>
+</tbody></table>
+
+<h3>RQ5: What was the breaking point for churn?</h3>
+<table><thead><tr><th>Theme</th><th>Count</th><th>Prev</th><th>Representative Quote</th></tr></thead><tbody>
+<tr><td>Enterprise compliance undelivered</td><td>6</td><td>33%</td><td><em>"We were promised SSO would be ready by month 3. It's been 8 months."</em> — churn_21</td></tr>
+<tr><td>Mobile app failures</td><td>6</td><td>33%</td><td><em>"Our on-call team gave up on the mobile app. Too many crashes."</em> — churn_22</td></tr>
+<tr><td>Reporting limitations</td><td>6</td><td>33%</td><td><em>"Reporting is broken. We had to go back to Zendesk for visibility."</em> — churn_23</td></tr>
+<tr><td>Multi-tenant absent</td><td>4</td><td>22%</td><td><em>"We manage 15 client accounts. Fab Lab can't isolate them. We left."</em> — support_q2</td></tr>
+<tr><td>Pricing at scale</td><td>4</td><td>22%</td><td><em>"At $100/seat, our 50-person team would cost $60K/year."</em> — survey_03</td></tr>
+</tbody></table>
+<p><strong>Where they went:</strong> Zendesk (5), Freshdesk (2), Intercom (1), proprietary (1)</p>
+
+<h3>RQ8: What drives expansion?</h3>
+<table><thead><tr><th>Theme</th><th>Count</th><th>Prev</th><th>Representative Quote</th></tr></thead><tbody>
+<tr><td>Reporting delivery</td><td>32</td><td>46%</td><td><em>"If you ship reporting, we'd expand from 15 to 25 seats."</em> — renewal_20</td></tr>
+<tr><td>Enterprise features</td><td>20</td><td>29%</td><td><em>"Once you have SSO and audit logs, we'll roll this out to the whole company."</em> — renewal_21</td></tr>
+<tr><td>Health scoring ROI</td><td>19</td><td>28%</td><td><em>"Health scoring caught a churn risk we missed. That saves us $50K."</em> — cab_q2</td></tr>
+<tr><td>Mobile stability</td><td>18</td><td>26%</td><td><em>"If the mobile app worked, we'd use it for everything."</em> — survey_01</td></tr>
+<tr><td>Salesforce sync</td><td>14</td><td>20%</td><td><em>"Salesforce integration would cement our decision to expand."</em> — upsell_24</td></tr>
+</tbody></table>
+
+<hr>
+
+<h2>High-Intensity Outliers</h2>
+
+<h3>Healthcare/Finance Exodus</h3>
+<p><strong>Risk: HIGH</strong> — 3 churned customers in regulated verticals cite unmet compliance needs (HIPAA, SOX). All went to vertical-specific competitors.</p>
+
+<h3>On-Call Mobile Dependency</h3>
+<p><strong>Risk: MEDIUM</strong> — Field teams depend on mobile notifications. Crashes = service reliability risk. 6+ customers reverted to email/SMS.</p>
+
+<h3>Unrealized Consolidation</h3>
+<p><strong>Risk: MEDIUM</strong> — 43% of renewed customers still maintain secondary tools (Zendesk for reporting, Mailchimp for campaigns, spreadsheets for health).</p>
+
+<h3>Pricing at 30+ Seats</h3>
+<p><strong>Risk: MEDIUM</strong> — 4 customers cite per-seat pricing as untenable at enterprise scale. 3+ lost deals had pricing as a factor.</p>
+
+<h3>Roadmap Credibility Crisis</h3>
+<p><strong>Risk: MEDIUM</strong> — Reporting promised 3+ times and slipped. Customers becoming skeptical of announced features.</p>
+
+<hr>
+
+<h2>Segment Analysis</h2>
+
+<h3>Prospects (n=20)</h3>
+<ul>
+<li><strong>Top pain:</strong> Tool consolidation (56%), manual health scoring (33%)</li>
+<li><strong>Top objections:</strong> Reporting (23%), SSO (20%), pricing (16%)</li>
+<li><strong>Win rate:</strong> 60% vs Zendesk, 55% vs Intercom</li>
+</ul>
+
+<h3>Established (n=18)</h3>
+<ul>
+<li><strong>Love:</strong> Unified inbox (41%), health scoring (34%), speed (32%)</li>
+<li><strong>Complaints:</strong> Reporting (44%), mobile (37%), enterprise auth (31%)</li>
+<li>43% still use secondary tools</li>
+</ul>
+
+<h3>Churned (n=18)</h3>
+<ul>
+<li><strong>Drivers:</strong> Reporting (33%), mobile (33%), compliance (33%)</li>
+<li><strong>Destinations:</strong> Zendesk (5), Freshdesk (2), Intercom (1)</li>
+<li>60% potentially reversible with reporting + mobile fixes</li>
+</ul>
+
+<hr>
+
+<h2>Feature Requests &amp; Unmet Needs</h2>
+
+<h3>Critical (Blocking Expansion)</h3>
+<table><thead><tr><th>#</th><th>Feature</th><th>Sources</th><th>Prev</th></tr></thead><tbody>
+<tr><td>1</td><td>Reporting Suite</td><td>24</td><td>44%</td></tr>
+<tr><td>2</td><td>Mobile App Stability</td><td>20</td><td>37%</td></tr>
+<tr><td>3</td><td>Enterprise Bundle (SSO+RBAC)</td><td>17</td><td>31%</td></tr>
+</tbody></table>
+
+<h3>High (Affecting Satisfaction)</h3>
+<table><thead><tr><th>#</th><th>Feature</th><th>Sources</th><th>Prev</th></tr></thead><tbody>
+<tr><td>4</td><td>Salesforce Bi-directional Sync</td><td>14</td><td>20%</td></tr>
+<tr><td>5</td><td>KB Search Modernization</td><td>13</td><td>24%</td></tr>
+<tr><td>6</td><td>Email Campaign Enhancements</td><td>9</td><td>17%</td></tr>
+</tbody></table>
+
+<h3>Medium (Niche/Vertical)</h3>
+<table><thead><tr><th>#</th><th>Feature</th><th>Sources</th><th>Prev</th></tr></thead><tbody>
+<tr><td>7</td><td>Multi-Tenant/White-Label</td><td>11</td><td>20%</td></tr>
+<tr><td>8</td><td>Vertical Compliance</td><td>6</td><td>11%</td></tr>
+<tr><td>9</td><td>API/Webhooks</td><td>8</td><td>12%</td></tr>
+</tbody></table>
+
+<hr>
+
+<h2>So What?</h2>
+
+<h3>Messaging</h3>
+<ul>
+<li><strong>Prospect:</strong> Consolidate tools, cut cost 40–50% vs Zendesk. Live in 2–4 weeks.</li>
+<li><strong>Established:</strong> Health scoring saves $50K+ in churn/year. Reporting coming Q3.</li>
+<li><strong>Churned:</strong> Reporting shipped. Mobile stability improved. Let's reconnect.</li>
+<li><strong>Enterprise:</strong> SSO, RBAC, audit logging launching Q2–Q3. Early access for advisory board.</li>
+</ul>
+
+<h3>Product Roadmap</h3>
+<table><thead><tr><th>Quarter</th><th>Deliverables</th></tr></thead><tbody>
+<tr><td>Q2 2026</td><td>Enterprise MVP (SAML + RBAC) · Mobile stability · Reporting MVP</td></tr>
+<tr><td>Q3 2026</td><td>Reporting GA · Enterprise GA · Salesforce bi-directional sync</td></tr>
+<tr><td>Q4 2026</td><td>Multi-tenant MVP · KB search modernization</td></tr>
+</tbody></table>
+
+<h3>Sales Enablement</h3>
+<ol>
+<li>Publish 3–5 case studies from renewals/expansions (Q2)</li>
+<li>Zendesk win strategy playbook with competitive messaging</li>
+<li>Enterprise readiness checklist for top 10 objections</li>
+<li>Churn recovery playbook for 18 churned customers</li>
+<li>"Fastest Path to Value" GTM motion for Zendesk prospects</li>
+</ol>
+
+<hr>
+
+<h2>Open Questions</h2>
+<ol>
+<li>Why is consolidation the #1 driver but 43% still use secondary tools?</li>
+<li>What is the true CAC payback and LTV by segment?</li>
+<li>Are churned customers recoverable post-reporting GA?</li>
+<li>How do metrics compare to Zendesk/Intercom benchmarks?</li>
+<li>What's the TAM in regulated verticals if we close compliance gaps?</li>
+</ol>
+
+<h2>Blind Spots</h2>
+<ol>
+<li>No product usage telemetry (DAU, feature adoption)</li>
+<li>No SMB vs enterprise segment split in data</li>
+<li>Only 6 sources on vertical-specific needs</li>
+<li>No competitive feature parity matrix</li>
+<li>No economic impact model for churn</li>
+<li>Unknown mobile-first workflow percentage</li>
+<li>Objection resolution success rates unknown</li>
+<li>No Customer Effort Score (CES) data</li>
+</ol>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================= -->
+<!-- === JAVASCRIPT                            === -->
+<!-- ============================================= -->
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+/* =========================================== */
+/* === TYPEWRITER UTILITY                 === */
+/* =========================================== */
+function typewriter(elementId, text, duration) {
+  const el = document.getElementById(elementId);
+  const len = text.length;
+  let obj = { chars: 0 };
+  return gsap.to(obj, {
+    chars: len,
+    duration: duration,
+    ease: "none",
+    onUpdate: () => { el.textContent = text.substring(0, Math.round(obj.chars)); }
+  });
+}
+
+/* =========================================== */
+/* === PANEL OUTPUT TEXTS                 === */
+/* =========================================== */
+const panelTexts = {
+  1: `Puzzle offers a modern, innovative approach to accounting that sets it apart from traditional solutions like QuickBooks. With its cutting-edge technology and user-friendly interface, Puzzle delivers remarkable value to businesses looking for a better way to manage their finances. Unlike legacy platforms, Puzzle leverages the latest innovations to provide a truly transformative experience for today's forward-thinking organizations.`,
+
+  2: `Puzzle is an AI-powered accounting platform designed for enterprise teams seeking unified financial operations. Key features include multi-currency support, inventory tracking, and compliance automation. QuickBooks users have noted limitations around reporting. Puzzle\u2019s proprietary reconciliation engine processes 10,000+ transactions per second with bank-grade encryption. The platform supports SOC 2 compliance and offers white-glove onboarding for teams of 50+. Founded in 2019, Puzzle has raised $42M in Series B funding and serves customers across 14 countries.`,
+
+  3: `Startup founders switch to Puzzle because QuickBooks was built for accountants, not founders. In our analysis of 232 onboarding calls, the #1 pain: QuickBooks requires accounting knowledge most founders don't have. Puzzle\u2019s AI categorization eliminates the manual work \u2014 customers call it \u201ca huge time saver\u201d that reduces bookkeeping from hours to minutes. For founders tracking burn rate before board meetings, Puzzle surfaces real-time ARR, runway, and financial metrics that QuickBooks buries behind custom report configurations.`
+};
+
+/* Artifact content is now inline in the HTML cards */
+
+/* =========================================== */
+/* === SYNTHESIS TEXTS                    === */
+/* =========================================== */
+const synthesisText = `Pain Point #1: Manual categorization burden (81% of calls).
+Founders spend disproportionate time learning and operating
+QuickBooks rather than managing their business. Key driver:
+accounting expertise gap. Representative language: "I spent
+more time learning QuickBooks than actually doing my books."`;
+
+
+/* =========================================== */
+/* === ARTIFACT CARD CLICK HANDLERS       === */
+/* =========================================== */
+const artifactsGrid = document.getElementById('artifacts-grid');
+
+function collapseAllCards() {
+  document.querySelectorAll('.artifact-card.expanded').forEach(c => {
+    const expanded = c.querySelector('.doc-expanded');
+    gsap.to(expanded, { opacity: 0, height: 0, duration: 0.3, ease: "power2.in", onComplete: () => {
+      c.classList.remove('expanded');
+      artifactsGrid.classList.remove('has-expanded');
+      expanded.style.height = '';
+      expanded.style.opacity = '';
+    }});
+  });
+}
+
+document.querySelectorAll('.artifact-card').forEach(card => {
+  // Clicking the mini-doc area expands the card
+  card.querySelector('.doc-mini').addEventListener('click', () => {
+    const wasExpanded = card.classList.contains('expanded');
+    collapseAllCards();
+    if (!wasExpanded) {
+      artifactsGrid.classList.add('has-expanded');
+      card.classList.add('expanded');
+      const expanded = card.querySelector('.doc-expanded');
+      gsap.fromTo(expanded, { opacity: 0, height: 0 }, { opacity: 1, height: "auto", duration: 0.5, ease: "power2.out" });
+    }
+  });
+
+  // Close button collapses
+  const closeBtn = card.querySelector('.doc-close-btn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      collapseAllCards();
+    });
+  }
+});
+
+/* =========================================== */
+/* === PATH TAB CLICK HANDLER             === */
+/* =========================================== */
+function selectPath(tab) {
+  const wasActive = tab.classList.contains('active');
+  document.querySelectorAll('.path-tab').forEach(t => t.classList.remove('active'));
+  if (!wasActive) {
+    tab.classList.add('active');
+  }
+}
+
+/* =========================================== */
+/* === MODAL BACK BUTTON SUPPORT           === */
+/* =========================================== */
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.display = 'flex';
+    history.pushState({ modal: id }, '');
+  }
+}
+
+function closeAllModals() {
+  document.querySelectorAll('.report-modal-overlay').forEach(m => {
+    m.style.display = 'none';
+  });
+}
+
+window.addEventListener('popstate', function() {
+  closeAllModals();
+});
+
+document.querySelectorAll('[onclick*="style.display=\'flex\'"]').forEach(btn => {
+  const match = btn.getAttribute('onclick').match(/getElementById\('([^']+)'\)/);
+  if (match) {
+    const modalId = match[1];
+    btn.setAttribute('onclick', '');
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      openModal(modalId);
+    });
+  }
+});
+
+document.querySelectorAll('.report-modal-close').forEach(btn => {
+  btn.setAttribute('onclick', '');
+  btn.addEventListener('click', function() {
+    history.back();
+  });
+});
+
+document.querySelectorAll('.report-modal-overlay').forEach(overlay => {
+  overlay.setAttribute('onclick', '');
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) history.back();
+  });
+});
+
+/* =========================================== */
+/* === SECTION 00: OPENER                 === */
+/* =========================================== */
+const openerTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+openerTl
+  .from(".opener-title", { opacity: 0, y: 40, duration: 1 })
+  .from(".subtitle", { opacity: 0, y: 20, duration: 0.8 }, "-=0.4")
+  .from(".speaker", { opacity: 0, duration: 0.5 }, "-=0.3");
+
+gsap.utils.toArray(".outcomes li").forEach((li, i) => {
+  gsap.to(li, {
+    opacity: 1, x: 0, duration: 0.8, ease: "power2.out",
+    scrollTrigger: { trigger: li, start: "top 85%", toggleActions: "play none none reverse" },
+    delay: i * 0.15
+  });
+});
+
+gsap.to(".opener-illustration", {
+  opacity: 1, y: 0, duration: 1.2, ease: "power2.out",
+  scrollTrigger: { trigger: ".opener-illustration", start: "top 80%", toggleActions: "play none none reverse" }
+});
+
+/* =========================================== */
+/* === SECTION 01: THE PROBLEM            === */
+/* =========================================== */
+gsap.from(".problem-text h2", {
+  opacity: 0, y: 30, duration: 1,
+  scrollTrigger: { trigger: ".problem-text", start: "top 75%", toggleActions: "play none none reverse" }
+});
+
+gsap.from(".problem-text p", {
+  opacity: 0, y: 20, duration: 0.8,
+  scrollTrigger: { trigger: ".problem-text p", start: "top 80%", toggleActions: "play none none reverse" }
+});
+
+/* Diet pill scatter animation */
+const pillTl = gsap.timeline({
+  scrollTrigger: {
+    trigger: "#diet-pill-container",
+    start: "top 70%",
+    toggleActions: "play none none reverse"
+  }
+});
+
+// First show the pill
+pillTl.from("#diet-pill", { opacity: 0, scale: 0.8, duration: 0.6, ease: "back.out(1.7)" });
+
+// Then scatter buzzwords outward and fade pill
+const buzzWords = document.querySelectorAll(".buzz-word");
+buzzWords.forEach((word, i) => {
+  const angle = parseFloat(word.dataset.angle) * (Math.PI / 180);
+  const distance = 120 + Math.random() * 80;
+  const tx = Math.cos(angle) * distance;
+  const ty = Math.sin(angle) * distance;
+  const rot = (Math.random() - 0.5) * 40;
+
+  pillTl.to(word, {
+    opacity: 0.3,
+    x: tx,
+    y: ty,
+    rotation: rot,
+    duration: 0.8,
+    ease: "power2.out"
+  }, 0.8 + i * 0.05);
+});
+
+pillTl.to("#diet-pill", { opacity: 0, scale: 0.5, duration: 0.6 }, 0.8);
+
+/* =========================================== */
+/* === SECTION 02: THE DEMO              === */
+/* =========================================== */
+gsap.from(".demo h2", {
+  opacity: 0, y: 30, duration: 1,
+  scrollTrigger: { trigger: ".demo h2", start: "top 80%", toggleActions: "play none none reverse" }
+});
+
+gsap.to(".prompt-bar", {
+  opacity: 1, duration: 0.8,
+  scrollTrigger: { trigger: ".prompt-bar", start: "top 85%", toggleActions: "play none none reverse" }
+});
+
+/* Panel 1 — empty dropzone */
+const p1Tl = gsap.timeline({
+  scrollTrigger: { trigger: "#panel-1", start: "top 80%", toggleActions: "play none none reverse" }
+});
+p1Tl.to("#panel-1", { opacity: 1, y: 0, duration: 0.7 })
+    .to(".context-dropzone", { opacity: 1, duration: 0.6, ease: "power2.out" }, "-=0.2")
+    .add(typewriter("typed-1", panelTexts[1], 3), "+=0.2");
+
+/* Panel 2 — chaos docs with overflow */
+const p2Tl = gsap.timeline({
+  scrollTrigger: { trigger: "#panel-2", start: "top 85%", toggleActions: "play none none reverse" }
+});
+p2Tl.to("#panel-2", { opacity: 1, y: 0, duration: 0.7 });
+document.querySelectorAll(".context-chaos-item").forEach((item, i) => {
+  p2Tl.to(item, {
+    opacity: 1, y: gsap.utils.random(-5, 10), rotation: gsap.utils.random(-12, 12),
+    duration: 0.25, ease: "back.out(2)"
+  }, `-=${i > 0 ? 0.12 : 0}`);
+});
+p2Tl.to(".context-overflow-bar", { opacity: 1, duration: 0.5 }, "-=0.1")
+    .add(typewriter("typed-2", panelTexts[2], 3), "+=0.2");
+
+/* Panel 3 — clean 2x2 grid with checkmarks */
+const p3Tl = gsap.timeline({
+  scrollTrigger: { trigger: "#panel-3", start: "top 85%", toggleActions: "play none none reverse" }
+});
+p3Tl.to("#panel-3", { opacity: 1, y: 0, duration: 0.7 });
+document.querySelectorAll(".context-clean-item").forEach((item, i) => {
+  p3Tl.to(item, { opacity: 1, y: 0, duration: 0.35 }, `-=${i > 0 ? 0.15 : 0}`);
+});
+p3Tl.add(typewriter("typed-3", panelTexts[3], 4), "+=0.2");
+
+/* Diagnostic */
+gsap.to("#diagnostic", {
+  opacity: 1, y: 0, duration: 0.8,
+  scrollTrigger: { trigger: "#diagnostic", start: "top 90%", toggleActions: "play none none reverse" }
+});
+
+/* =========================================== */
+/* === SECTION 04: THE NEW HIRE           === */
+/* =========================================== */
+gsap.from(".newhire h2", {
+  opacity: 0, y: 30, duration: 1,
+  scrollTrigger: { trigger: ".newhire h2", start: "top 75%", toggleActions: "play none none reverse" }
+});
+
+gsap.from(".newhire > .section-inner > p", {
+  opacity: 0, y: 20, duration: 0.8,
+  scrollTrigger: { trigger: ".newhire > .section-inner > p", start: "top 80%", toggleActions: "play none none reverse" }
+});
+
+document.querySelectorAll(".scenario").forEach((card, i) => {
+  gsap.to(card, {
+    opacity: 1, y: 0, duration: 0.8, delay: i * 0.2,
+    scrollTrigger: { trigger: card, start: "top 85%", toggleActions: "play none none reverse" }
+  });
+});
+
+gsap.to(".newhire-cta", {
+  opacity: 1, duration: 1,
+  scrollTrigger: { trigger: ".newhire-cta", start: "top 90%", toggleActions: "play none none reverse" }
+});
+
+/* =========================================== */
+/* === SECTION 05: ARTIFACT SYSTEM        === */
+/* =========================================== */
+gsap.from(".artifacts h2", {
+  opacity: 0, y: 30, duration: 1,
+  scrollTrigger: { trigger: ".artifacts h2", start: "top 75%", toggleActions: "play none none reverse" }
+});
+
+document.querySelectorAll(".artifact-card").forEach((card, i) => {
+  gsap.to(card, {
+    opacity: 1, y: 0, duration: 0.7, delay: i * 0.1,
+    scrollTrigger: { trigger: ".artifacts-grid", start: "top 75%", toggleActions: "play none none reverse" }
+  });
+});
+
+gsap.from(".artifact-dependencies", {
+  opacity: 0, y: 20, duration: 0.8,
+  scrollTrigger: { trigger: ".artifact-dependencies", start: "top 85%", toggleActions: "play none none reverse" }
+});
+
+// Animate dependency connection lines drawing on scroll
+document.querySelectorAll(".dep-connection").forEach((line, i) => {
+  const length = line.getTotalLength ? line.getTotalLength() : 200;
+  gsap.set(line, { strokeDasharray: length, strokeDashoffset: length });
+  gsap.to(line, {
+    strokeDashoffset: 0, duration: 1, delay: 0.15 * i, ease: "power2.out",
+    scrollTrigger: { trigger: ".artifact-dependencies", start: "top 80%", toggleActions: "play none none reverse" }
+  });
+});
+
+/* =========================================== */
+/* === SECTION 06: THREE RULES            === */
+/* =========================================== */
+gsap.from(".threerules h2", {
+  opacity: 0, y: 30, duration: 1,
+  scrollTrigger: { trigger: ".threerules h2", start: "top 75%", toggleActions: "play none none reverse" }
+});
+
+document.querySelectorAll(".rule-card").forEach((card, i) => {
+  gsap.to(card, {
+    opacity: 1, x: 0, duration: 0.8, delay: i * 0.1,
+    scrollTrigger: { trigger: card, start: "top 85%", toggleActions: "play none none reverse" }
+  });
+});
+
+/* =========================================== */
+/* === SECTION 02: THE CONTEXT WINDOW     === */
+/* =========================================== */
+
+// Draw connector lines between mockup elements and corresponding blocks
+function drawConnectors() {
+  const svg = document.getElementById("cw-connectors");
+  if (!svg) return;
+  const splitRect = document.getElementById("cw-split").getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${splitRect.width} ${splitRect.height}`);
+  svg.style.width = splitRect.width + "px";
+  svg.style.height = splitRect.height + "px";
+  svg.innerHTML = "";
+
+  document.querySelectorAll(".cw-block[data-maps-to]").forEach(block => {
+    const sourceEl = document.getElementById(block.dataset.mapsTo);
+    if (!sourceEl) return;
+    const srcRect = sourceEl.getBoundingClientRect();
+    const dstRect = block.getBoundingClientRect();
+
+    const x1 = srcRect.right - splitRect.left;
+    const y1 = srcRect.top + srcRect.height / 2 - splitRect.top;
+    const x2 = dstRect.left - splitRect.left;
+    const y2 = dstRect.top + dstRect.height / 2 - splitRect.top;
+    const mx = (x1 + x2) / 2;
+
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+    path.setAttribute("class", "cw-connector-line");
+    svg.appendChild(path);
+  });
+}
+
+// Redraw on resize
+window.addEventListener("resize", drawConnectors);
+
+// Training block is always visible (base layer)
+gsap.set(".cw-block-training", { opacity: 0.5, y: 0 });
+
+// Helper refs
+const capFill = document.getElementById("cw-capacity-fill");
+const capLabel = document.getElementById("cw-capacity-label");
+const filesLabel = document.getElementById("cw-files-label");
+const filesTokens = document.getElementById("cw-files-tokens");
+const histLabel = document.getElementById("cw-history-label");
+const histTokens = document.getElementById("cw-history-tokens");
+const filesBlock = document.querySelector(".cw-block-files");
+const histBlock = document.querySelector(".cw-block-history");
+const maxTokens = 200000;
+
+function setCapacity(tokens) {
+  if (capLabel) capLabel.textContent = "~" + tokens.toLocaleString() + " / 200,000 tokens used";
+}
+
+// Fade in heading + intro
+gsap.from(".theory-section h2", {
+  opacity: 0, y: 30, duration: 1,
+  scrollTrigger: { trigger: ".theory-section h2", start: "top 75%", toggleActions: "play none none reverse" }
+});
+
+gsap.from(".theory-section > .section-inner > p", {
+  opacity: 0, y: 20, duration: 0.8,
+  scrollTrigger: { trigger: ".theory-section > .section-inner > p", start: "top 80%", toggleActions: "play none none reverse" }
+});
+
+// Master auto-play timeline — triggers once section enters viewport
+const cwMaster = gsap.timeline({
+  scrollTrigger: {
+    trigger: "#cw-split",
+    start: "top 70%",
+    toggleActions: "play none none reverse"
+  }
+});
+
+// Fade in mockup
+cwMaster.from(".cw-mockup", { opacity: 0, x: -30, duration: 0.8 }, 0);
+
+// Tools block
+cwMaster.to(".cw-block-tools", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.3)
+  .to(capFill, { width: "1.5%", duration: 0.3, onUpdate() { setCapacity(3000); } }, 0.5);
+
+// System prompt
+cwMaster.to(".cw-block-system", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.9)
+  .to(capFill, { width: "2.25%", duration: 0.3, onUpdate() { setCapacity(4500); } }, 1.1);
+
+// Instruction
+cwMaster.to(".cw-block-instruction", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 1.5)
+  .to(capFill, { width: "2.5%", duration: 0.3, onUpdate() { setCapacity(5000); } }, 1.7);
+
+// Files block + first 2 progressive sidebar files
+cwMaster.to(".cw-block-files", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 2.1)
+  .to(capFill, { width: "10%", duration: 0.4, onUpdate() { setCapacity(20000); } }, 2.3)
+  .to("#mock-file-5", { opacity: 1, maxHeight: 30, duration: 0.4, onStart() { document.getElementById("mock-file-5").style.padding = "5px 6px"; } }, 2.5)
+  .to("#mock-file-6", { opacity: 1, maxHeight: 30, duration: 0.4, onStart() { document.getElementById("mock-file-6").style.padding = "5px 6px"; } }, 2.8);
+
+// Files block GROWS, more sidebar files, tokens jump
+cwMaster.to(filesBlock, { minHeight: 180, duration: 0.6 }, 3.2)
+  .to("#mock-file-7", { opacity: 1, maxHeight: 30, duration: 0.4, onStart() { document.getElementById("mock-file-7").style.padding = "5px 6px"; } }, 3.2)
+  .to("#mock-file-8", { opacity: 1, maxHeight: 30, duration: 0.4, onStart() { document.getElementById("mock-file-8").style.padding = "5px 6px"; } }, 3.5)
+  .to(capFill, { width: "16.5%", duration: 0.5, onComplete() {
+    setCapacity(33000);
+    if (filesLabel) filesLabel.textContent = "research-synthesis.md + 7 files";
+    if (filesTokens) filesTokens.textContent = "~28K tokens";
+  } }, 3.5);
+
+// History block + first 2 progressive messages
+cwMaster.to(".cw-block-history", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 4.2)
+  .to(capFill, { width: "17.5%", duration: 0.3, onUpdate() { setCapacity(35000); } }, 4.4)
+  .to("#mock-history-4", { opacity: 1, maxHeight: 60, duration: 0.4 }, 4.6)
+  .to("#mock-history-5", { opacity: 1, maxHeight: 60, duration: 0.4 }, 4.9);
+
+// History GROWS, more messages, label updates
+cwMaster.to(histBlock, { minHeight: 100, duration: 0.6 }, 5.3)
+  .to("#mock-history-6", { opacity: 1, maxHeight: 60, duration: 0.4 }, 5.3)
+  .to("#mock-history-7", { opacity: 1, maxHeight: 60, duration: 0.4 }, 5.6)
+  .to(capFill, { width: "20%", duration: 0.5, onComplete() {
+    setCapacity(40000);
+    if (histLabel) histLabel.textContent = "Conversation history (14 turns)";
+    if (histTokens) histTokens.textContent = "~5K tokens";
+  } }, 5.6);
+
+// Prompt block + connector lines
+cwMaster.to(".cw-block-prompt", { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 6.3)
+  .to(capFill, { width: "20.015%", duration: 0.3, onUpdate() { setCapacity(40030); } }, 6.5)
+  .call(() => {
+    drawConnectors();
+    gsap.to(".cw-connector-line", { opacity: 0.5, duration: 0.6, stagger: 0.1 });
+  }, null, 7.0);
+
+// Insight quote
+cwMaster.from(".theory-insight", { opacity: 0, x: -20, duration: 0.8 }, 7.5);
+
+/* =========================================== */
+/* === SECTION 08: SYNTHESIS DEMO        === */
+/* =========================================== */
+gsap.from(".synthesis h2", {
+  opacity: 0, y: 30, duration: 1,
+  scrollTrigger: { trigger: ".synthesis h2", start: "top 75%", toggleActions: "play none none reverse" }
+});
+
+// Step 1: Raw transcripts (rotate stays, just fade in and scale up)
+const step1Tl = gsap.timeline({
+  scrollTrigger: { trigger: "#pipe-step-1", start: "top 80%", toggleActions: "play none none reverse" }
+});
+step1Tl.to("#pipe-step-1", { opacity: 1, y: 0, duration: 0.5 });
+document.querySelectorAll("#pipe-step-1 .transcript-block").forEach((block, i) => {
+  step1Tl.to(block, { opacity: 1, scale: 1, duration: 0.4, delay: i * 0.1 }, "-=0.1");
+});
+
+// Step 2: Spreadsheet of individual summaries
+const step2Tl = gsap.timeline({
+  scrollTrigger: { trigger: "#pipe-step-2", start: "top 80%", toggleActions: "play none none reverse" }
+});
+step2Tl.to("#pipe-step-2", { opacity: 1, y: 0, duration: 0.5 })
+       .to(".summary-spreadsheet", { opacity: 1, x: 0, duration: 0.6 }, "+=0.1");
+document.querySelectorAll(".synth-table-row").forEach((row, i) => {
+  step2Tl.to(row, { opacity: 1, y: 0, duration: 0.35 }, `-=${i > 0 ? 0.15 : 0}`);
+});
+
+// Step 3: Quantitative grouping with stat bar fills
+const step3Tl = gsap.timeline({
+  scrollTrigger: { trigger: "#pipe-step-3", start: "top 80%", toggleActions: "play none none reverse" }
+});
+step3Tl.to("#pipe-step-3", { opacity: 1, y: 0, duration: 0.5 })
+       .to(".grouped-block", { opacity: 1, x: 0, duration: 0.6 }, "+=0.1");
+document.querySelectorAll(".stat-bar-fill").forEach((bar, i) => {
+  step3Tl.to(bar, {
+    width: bar.dataset.width,
+    duration: 0.6,
+    ease: "power2.out"
+  }, "-=0.3");
+});
+
+// Step 4: Final synthesis with typewriter
+const step4Tl = gsap.timeline({
+  scrollTrigger: { trigger: "#pipe-step-4", start: "top 80%", toggleActions: "play none none reverse" }
+});
+step4Tl.to("#pipe-step-4", { opacity: 1, y: 0, duration: 0.5 })
+       .to(".synthesis-block", { opacity: 1, x: 0, duration: 0.5 })
+       .add(typewriter("typed-synthesis", synthesisText, 4), "+=0.2");
+
+/* =========================================== */
+/* === SECTION 10: EXPERIMENT            === */
+/* =========================================== */
+gsap.from(".diagnose h2", {
+  opacity: 0, y: 30, duration: 1,
+  scrollTrigger: { trigger: ".diagnose h2", start: "top 75%", toggleActions: "play none none reverse" }
+});
+
+gsap.from(".diag-table", {
+  opacity: 0, y: 20, duration: 0.8,
+  scrollTrigger: { trigger: ".diag-table", start: "top 85%", toggleActions: "play none none reverse" }
+});
+
+</script>
+
+</body>
+</html>
